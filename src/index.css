@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-base text-ink font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(200, 155, 60, 0.16), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(185, 28, 28, 0.08), transparent 70%);
+    background-attachment: fixed;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Scrollbar dorado sobre fondo cálido */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(200, 155, 60, 0.30);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(200, 155, 60, 0.55); }
+
+  ::selection { background: rgba(200, 155, 60, 0.40); color: #F5F0E8; }
+}
+
+@layer components {
+  /* CSS directo en lugar de @apply para evitar que Tailwind no genere
+     variantes con opacity (border-gold/25) usadas solo dentro de @layer. */
+  .glass {
+    background-color: rgba(28, 23, 18, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid #2C2418;
+  }
+  .glass-elevated {
+    background-color: rgba(28, 23, 18, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(200, 155, 60, 0.25);
+  }
+  .gold-text {
+    color: #C89B3C;
+    text-shadow: 0 0 10px rgba(200, 155, 60, 0.5), 0 0 20px rgba(200, 155, 60, 0.25);
+  }
+  .gold-border {
+    border: 1px solid rgba(200, 155, 60, 0.45);
+    box-shadow: 0 0 10px rgba(200, 155, 60, 0.22), inset 0 0 10px rgba(200, 155, 60, 0.06);
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(200, 155, 60, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200, 155, 60, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
