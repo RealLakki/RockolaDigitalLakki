@@ -1,4 +1,4 @@
-﻿import { boostItem, removeQueueItem, setItemStatus, unboostItem, updateVenue } from '../../lib/supabase';
+import { boostItem, removeQueueItem, setItemStatus, unboostItem, updateVenue } from '../../lib/supabase';
 import { joinArtists } from '../../utils/formatters';
 import type { QueueItem, Venue } from '../../lib/types';
 import { NeonButton } from '../common/NeonButton';
@@ -8,13 +8,19 @@ interface Props {
   queued: QueueItem[];
   nowPlaying: QueueItem | null;
   onVenueUpdate: (patch: Partial<Venue>) => void;
+  /** Refresca la cola manualmente — defensivo por si el realtime falla
+   * (especialmente DELETE events sin REPLICA IDENTITY FULL en la tabla). */
+  onRefresh: () => Promise<unknown>;
 }
 
-export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate }: Props) {
-  const blockTrack = async (trackId: string) => {
+export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefresh }: Props) {
+  const after = (p: Promise<unknown>) =>
+    p.then(() => onRefresh()).catch((e) => console.error('[admin] action failed:', e));
+
+  const blockTrack = (trackId: string) => {
     const next = Array.from(new Set([...venue.blockedTrackIds, trackId]));
-    await updateVenue(venue.id, { blockedTrackIds: next });
-    onVenueUpdate({ blockedTrackIds: next });
+    void updateVenue(venue.id, { blockedTrackIds: next })
+      .then(() => onVenueUpdate({ blockedTrackIds: next }));
   };
 
   return (
@@ -34,7 +40,7 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate }: Props
           <NeonButton
             size="sm"
             variant="danger"
-            onClick={() => setItemStatus(nowPlaying.id, 'skipped')}
+            onClick={() => after(setItemStatus(nowPlaying.id, 'skipped'))}
           >
             Saltar
           </NeonButton>
@@ -75,13 +81,18 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate }: Props
               <NeonButton
                 size="sm"
                 variant="ghost"
-                onClick={() => unboostItem(item.id, venue.id)}
+                onClick={() => after(unboostItem(item.id, venue.id))}
                 title="Quitar boost — vuelve al final de la cola"
               >
                 ↓
               </NeonButton>
             ) : (
-              <NeonButton size="sm" variant="ghost" onClick={() => boostItem(item.id)} title="Subir al frente">
+              <NeonButton
+                size="sm"
+                variant="ghost"
+                onClick={() => after(boostItem(item.id))}
+                title="Subir al frente"
+              >
                 ⚡
               </NeonButton>
             )}
@@ -93,7 +104,11 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate }: Props
             >
               ⛔
             </NeonButton>
-            <NeonButton size="sm" variant="danger" onClick={() => removeQueueItem(item.id)}>
+            <NeonButton
+              size="sm"
+              variant="danger"
+              onClick={() => after(removeQueueItem(item.id))}
+            >
               ✕
             </NeonButton>
           </div>

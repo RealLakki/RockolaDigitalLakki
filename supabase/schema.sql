@@ -100,6 +100,13 @@ create policy "yt_res_write" on public.youtube_resolutions for insert with check
 alter publication supabase_realtime add table public.queue_items;
 alter publication supabase_realtime add table public.venues;
 
+-- IMPORTANTE: REPLICA IDENTITY FULL hace que los eventos DELETE incluyan
+-- TODA la fila vieja (no solo el PK), lo que permite que filtros como
+-- `venue_id=eq.X` funcionen para DELETE. Sin esto, los DELETE realtime
+-- nunca pasan el filtro y la cola no se actualiza al borrar items.
+alter table public.queue_items replica identity full;
+alter table public.venues replica identity full;
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Seed: venue de prueba con slug "demo"
 -- ─────────────────────────────────────────────────────────────────────────────

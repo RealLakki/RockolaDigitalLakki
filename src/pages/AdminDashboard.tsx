@@ -14,7 +14,7 @@ import { GlowCard } from '../components/common/GlowCard';
 export function AdminDashboard() {
   const { slug } = useParams<{ slug: string }>();
   const { venue, loading, setVenue } = useVenue(slug);
-  const { queued, nowPlaying } = useQueue(venue?.id);
+  const { queued, nowPlaying, refresh: refreshQueue } = useQueue(venue?.id);
 
   if (loading) {
     return (
@@ -78,6 +78,7 @@ export function AdminDashboard() {
               queued={queued}
               nowPlaying={nowPlaying}
               onVenueUpdate={patchVenue}
+              onRefresh={refreshQueue}
             />
           </GlowCard>
 
