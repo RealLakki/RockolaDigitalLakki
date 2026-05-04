@@ -6,6 +6,8 @@ export type Genre =
   | 'champeta'
   | 'vallenato'
   | 'cumbia'
+  | 'popular'
+  | 'ranchera'
   | 'pop'
   | 'rock'
   | 'electronica'
@@ -18,8 +20,8 @@ export type Genre =
 
 export const ALL_GENRES: Genre[] = [
   'reggaeton', 'salsa', 'merengue', 'bachata', 'champeta', 'vallenato',
-  'cumbia', 'pop', 'rock', 'electronica', 'hiphop', 'rnb', 'afrobeats',
-  'dembow', 'banda', 'corridos',
+  'cumbia', 'popular', 'ranchera', 'pop', 'rock', 'electronica', 'hiphop',
+  'rnb', 'afrobeats', 'dembow', 'banda', 'corridos',
 ];
 
 export const GENRE_LABEL: Record<Genre, string> = {
@@ -30,6 +32,8 @@ export const GENRE_LABEL: Record<Genre, string> = {
   champeta: 'Champeta',
   vallenato: 'Vallenato',
   cumbia: 'Cumbia',
+  popular: 'Popular (despecho)',
+  ranchera: 'Ranchera',
   pop: 'Pop',
   rock: 'Rock',
   electronica: 'Electrónica',
@@ -55,6 +59,8 @@ export const GENRE_KEYWORDS: Record<Genre, string[]> = {
   champeta: ['champeta', 'tropical'],
   vallenato: ['vallenato'],
   cumbia: ['cumbia', 'tropical'],
+  popular: ['popular'],
+  ranchera: ['ranchera', 'mariachi'],
   pop: ['pop'],
   rock: ['rock', 'alternative', 'metal'],
   electronica: ['electronic', 'electrónica', 'dance', 'house', 'edm'],
@@ -80,6 +86,14 @@ export const GENRE_LASTFM_TAGS: Record<Genre, string[]> = {
   champeta: ['champeta', 'champeta urbana'],
   vallenato: ['vallenato', 'vallenato moderno', 'vallenato romantico'],
   cumbia: ['cumbia', 'cumbia colombiana', 'cumbia villera', 'cumbia sonidera'],
+  // Música popular colombiana — Yeison Jimenez, Pipe Bueno, Jessi Uribe,
+  // Jhonny Rivera, Arelys Henao. Tags reales que devuelve Last.fm.
+  popular: [
+    'popular', 'musica popular', 'música popular', 'popular colombiano',
+    'despecho', 'ranchera colombiana', 'colombian popular',
+  ],
+  // Ranchera mexicana tradicional — Vicente Fernández, Pedro Infante.
+  ranchera: ['ranchera', 'mariachi', 'mexican folk', 'rancheras', 'mexican ranchera'],
   pop: ['pop', 'latin pop', 'pop latino', 'spanish pop', 'pop rock'],
   rock: ['rock', 'classic rock', 'hard rock', 'metal', 'alternative rock', 'indie rock', 'rock en español', 'rock latino'],
   electronica: ['electronic', 'electronica', 'electrónica', 'house', 'techno', 'edm', 'dance', 'electro'],
@@ -88,14 +102,16 @@ export const GENRE_LASTFM_TAGS: Record<Genre, string[]> = {
   afrobeats: ['afrobeats', 'afrobeat', 'afro', 'afropop'],
   dembow: ['dembow', 'dembow dominicano'],
   banda: ['banda', 'banda sinaloense', 'regional mexicano', 'banda mx'],
-  corridos: ['corridos', 'corridos tumbados', 'norteño', 'narcocorridos', 'corridos belicos', 'sad sierreño', 'sierreño'],
+  corridos: ['corridos', 'corrido', 'corridos tumbados', 'norteño', 'narcocorridos', 'corridos belicos', 'sad sierreño', 'sierreño', 'sierreno'],
 };
 
 /** Géneros latinos urbanos/tropicales — los que iTunes a veces etiqueta
- * solo como "Latin" / "Música Latina" sin granularidad. */
+ * solo como "Latin" / "Música Latina" sin granularidad. Popular y ranchera
+ * NO van aquí porque iTunes les pone genéricamente "Latin" pero realmente
+ * son género distinto. */
 const LATIN_NONREGIONAL: Genre[] = [
   'reggaeton', 'salsa', 'merengue', 'bachata', 'champeta',
-  'vallenato', 'cumbia', 'dembow',
+  'vallenato', 'cumbia', 'dembow', 'popular', 'ranchera',
 ];
 
 /** Géneros regionales mexicanos — iTunes los etiqueta como "Música Mexicana"
