@@ -51,6 +51,10 @@ const AUDIO_KEYWORDS = ['official audio', 'audio oficial', 'audio only'];
 const VIDEO_KEYWORDS = ['official video', 'video oficial', 'official music video'];
 
 const VEVO_SUFFIX = /VEVO$/i;
+// Canales auto-generados por YouTube (ej. "Santiago Giraldo - Topic"). No
+// tienen video real, solo audio con portada del álbum. Los penalizamos para
+// que el video oficial gane cuando existe.
+const TOPIC_SUFFIX = /\s*-\s*Topic$/i;
 
 const normalize = (s: string) =>
   s.toLowerCase()
@@ -203,19 +207,30 @@ export function scoreCandidate(
     reasons.push('channel:looks_official');
   }
 
+  // 9) Topic channels (auto-generados por YouTube, solo audio + portada).
+  // Penalizamos para que cuando exista un video oficial real, ese gane.
+  // Si NO hay alternativa con video, el Topic igual puede ganar como fallback.
+  const isTopicChannel = TOPIC_SUFFIX.test(candidate.channelTitle);
+  if (isTopicChannel) {
+    score -= 12;
+    reasons.push('channel:topic');
+  }
+
   const hasOfficialKw = reasons.some((r) =>
     r.startsWith('title:official') || r.startsWith('title:audio oficial') || r.startsWith('title:video oficial'),
   );
   const isOfficial =
     VEVO_SUFFIX.test(candidate.channelTitle) ||
+    isTopicChannel || // Topic SÍ es oficial (lo sube la disquera), solo no tiene video
     candidate.channelLooksOfficial ||
     (artistInChannel && hasOfficialKw);
 
   // Solo es "audio-only" si tiene la frase oficial — no la palabra "audio"
   // suelta (un video oficial puede decir "[Audio HD]" en el título).
   // Si el título es "Lyric Video" o "Letra", también es solo texto + arte.
+  // Topic channels NO tienen video real (solo portada estática).
   const isLyricOnly = /\b(lyric video|video lyric|video letra|letra oficial)\b/i.test(candidate.title);
-  const isAudioOnly = isAudioVersion || isLyricOnly;
+  const isAudioOnly = isAudioVersion || isLyricOnly || isTopicChannel;
   const hasVideo = !isAudioOnly;
 
   return { candidate, score, reasons, isOfficial, hasVideo };
