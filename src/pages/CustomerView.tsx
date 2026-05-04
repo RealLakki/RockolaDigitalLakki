@@ -11,6 +11,7 @@ import { NowPlayingMini } from '../components/customer/NowPlayingMini';
 import { ArtistCard } from '../components/customer/ArtistCard';
 import { AlbumCard } from '../components/customer/AlbumCard';
 import { Tabs } from '../components/customer/Tabs';
+import { TopTracksCard } from '../components/admin/TopTracksCard';
 import { GlowCard } from '../components/common/GlowCard';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
 import { CantinaLogo } from '../components/common/CantinaLogo';
@@ -338,12 +339,28 @@ function HomeView({
           </div>
         )
       ) : (
-        <GlowCard>
-          <h2 className="text-sm font-heading text-gold uppercase tracking-widest mb-3">
-            En cola ({queued.length})
-          </h2>
-          <QueueList items={queued} highlightClientId={clientId} />
-        </GlowCard>
+        <>
+          <GlowCard>
+            <h2 className="text-sm font-heading text-gold uppercase tracking-widest mb-3">
+              En cola ({queued.length})
+            </h2>
+            <QueueList items={queued} highlightClientId={clientId} />
+          </GlowCard>
+
+          <TopTracksCard
+            venueId={venue.id}
+            title="Más pedidas en el bar"
+            limit={10}
+            onAddTrack={onAddTrack}
+            disabledIds={
+              new Set([
+                ...queued.map((q) => q.track.providerId),
+                ...(nowPlaying ? [nowPlaying.track.providerId] : []),
+                ...venue.blockedTrackIds,
+              ])
+            }
+          />
+        </>
       )}
     </>
   );

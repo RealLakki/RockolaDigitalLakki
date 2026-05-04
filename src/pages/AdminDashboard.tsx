@@ -1,7 +1,11 @@
 ﻿import { Link, useParams } from 'react-router-dom';
+import { useCallback } from 'react';
 import { useVenue } from '../hooks/useVenue';
 import { useQueue } from '../hooks/useQueue';
 import { QueueManager } from '../components/admin/QueueManager';
+import { enqueueTrack } from '../lib/supabase';
+import { isYoutubeProvidedTrack, resolveOnYoutube, ytTrackToResolved } from '../lib/youtube';
+import type { TrackSearchResult } from '../lib/types';
 import { GenreSettings } from '../components/admin/GenreSettings';
 import { VenueSettings } from '../components/admin/VenueSettings';
 import { BlockedSongs } from '../components/admin/BlockedSongs';
@@ -34,6 +38,27 @@ export function AdminDashboard() {
   }
 
   const patchVenue = (patch: Partial<typeof venue>) => setVenue({ ...venue, ...patch });
+
+  const adminAddTrack = useCallback(
+    async (track: TrackSearchResult) => {
+      try {
+        const resolved = isYoutubeProvidedTrack(track)
+          ? ytTrackToResolved(track)
+          : await resolveOnYoutube(track);
+        if (!resolved) return;
+        await enqueueTrack({
+          venueId: venue!.id,
+          track: resolved,
+          requestedBy: 'admin',
+          requestedByName: 'Admin',
+        });
+        await refreshQueue();
+      } catch (e) {
+        console.error('[admin] add track failed:', e);
+      }
+    },
+    [venue, refreshQueue],
+  );
 
   return (
     <div className="min-h-screen pb-12">
@@ -83,7 +108,17 @@ export function AdminDashboard() {
             />
           </GlowCard>
 
-          <TopTracksCard venueId={venue.id} />
+          <TopTracksCard
+            venueId={venue.id}
+            onAddTrack={adminAddTrack}
+            disabledIds={
+              new Set([
+                ...queued.map((q) => q.track.providerId),
+                ...(nowPlaying ? [nowPlaying.track.providerId] : []),
+                ...venue.blockedTrackIds,
+              ])
+            }
+          />
           <GenreSettings venue={venue} onUpdate={patchVenue} />
           <BlockedSongs venue={venue} onUpdate={patchVenue} />
         </section>

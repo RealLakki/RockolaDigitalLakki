@@ -174,6 +174,7 @@ export interface TopTrackRow {
   title: string;
   artists: string[];
   imageUrl: string | null;
+  durationMs: number;
   requestCount: number;
   lastRequested: string;
 }
@@ -183,6 +184,7 @@ interface TopTrackDbRow {
   title: string;
   artists: unknown; // jsonb — viene como string[] o JSON string según supabase-js
   image_url: string | null;
+  duration_ms: number;
   request_count: number;
   last_requested: string;
 }
@@ -207,9 +209,22 @@ export async function getTopTracks(
         ? (JSON.parse(r.artists) as string[])
         : [],
     imageUrl: r.image_url,
+    durationMs: Number(r.duration_ms ?? 0),
     requestCount: Number(r.request_count),
     lastRequested: r.last_requested,
   }));
+}
+
+/** Convierte un TopTrackRow al formato común TrackSearchResult. Útil para
+ * pasar canciones del top al mismo handleAdd que usa la búsqueda normal. */
+export function topTrackToSearchResult(row: TopTrackRow): import('./types').TrackSearchResult {
+  return {
+    providerId: row.providerId,
+    title: row.title,
+    artists: row.artists,
+    durationMs: row.durationMs,
+    imageUrl: row.imageUrl ?? undefined,
+  };
 }
 
 /* ────────────────────────── YouTube cache ────────────────────────── */

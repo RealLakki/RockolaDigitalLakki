@@ -122,6 +122,7 @@ returns table (
   title text,
   artists jsonb,
   image_url text,
+  duration_ms int,
   request_count bigint,
   last_requested timestamptz
 )
@@ -133,6 +134,7 @@ as $$
     track->>'title' as title,
     track->'artists' as artists,
     track->>'imageUrl' as image_url,
+    coalesce((track->>'durationMs')::int, 0) as duration_ms,
     count(*)::bigint as request_count,
     max(created_at) as last_requested
   from public.queue_items
@@ -142,7 +144,8 @@ as $$
     track->>'providerId',
     track->>'title',
     track->'artists',
-    track->>'imageUrl'
+    track->>'imageUrl',
+    (track->>'durationMs')::int
   order by request_count desc, last_requested desc
   limit p_limit;
 $$;
