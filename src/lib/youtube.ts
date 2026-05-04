@@ -21,7 +21,7 @@ export const YT_AUDIO_PROVIDER_PREFIX = 'yt-audio:';
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 const MIN_ACCEPTABLE_SCORE = 28;
-const MAX_RESULTS = 15;
+const MAX_RESULTS = 25;
 
 interface YtSearchItem {
   id: { videoId: string };
@@ -122,6 +122,22 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
     ...nonTopic.sort((a, b) => b.viewCount - a.viewCount),
     ...topicOnly.sort((a, b) => b.viewCount - a.viewCount),
   ];
+
+  // Logs siempre activos para debug en producción — ayudan a calibrar.
+  console.log(
+    `[yt-fallback] "${q}" → ${candidates.length} raw, ${nonTopic.length} non-topic, ${topicOnly.length} topic`,
+  );
+  if (usable.length > 0) {
+    console.log(
+      '[yt-fallback] top 5:',
+      usable.slice(0, 5).map((c) => ({
+        title: c.title,
+        channel: c.channelTitle,
+        views: c.viewCount,
+        topic: TOPIC.test(c.channelTitle),
+      })),
+    );
+  }
 
   return usable.slice(0, 12).map((c) => {
     const isTopic = TOPIC.test(c.channelTitle);
