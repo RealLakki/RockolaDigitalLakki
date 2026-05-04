@@ -3,6 +3,9 @@ import { pickBestCandidate, type YoutubeCandidate } from '../utils/youtubeFilter
 import { cacheYoutubeResolution, getCachedYoutubeResolution } from './supabase';
 
 export const YT_PROVIDER_PREFIX = 'yt:';
+/** Igual que yt: pero indica que el video es solo audio (Topic auto-generado).
+ *  El reproductor mostrará el visualizer dorado en vez del iframe. */
+export const YT_AUDIO_PROVIDER_PREFIX = 'yt-audio:';
 
 /**
  * Resuelve un TrackSearchResult (de Spotify) al mejor video oficial de YouTube.
@@ -89,8 +92,9 @@ async function getVideoDetails(ids: string[]): Promise<YoutubeCandidate[]> {
  * Devuelve TrackSearchResult[] con providerId = "yt:VIDEOID" para que el
  * handleAdd sepa saltarse el resolver (el videoId ya lo tenemos).
  *
- * Filtra duro: solo videos oficiales (VEVO, "official", canal verificado),
- * descarta covers/karaoke/lives. Asi el fallback no abre la puerta a basura.
+ * Filtra duro: descarta covers/karaoke/lives. Si hay video oficial real,
+ * lo prefiere sobre los canales "Topic" auto-generados de YouTube
+ * (que solo tienen audio + portada).
  */
 export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchResult[]> {
   const q = query.trim();
@@ -99,15 +103,28 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
   const ids = await searchVideos(q);
   const candidates = await getVideoDetails(ids);
 
-  // Filtro: descartamos covers/karaoke/live/etc evaluando keywords negativos
   const NEGATIVES = /\b(karaoke|cover|tutorial|reaction|sped up|slowed|nightcore|8d|bass boosted|mashup|parody)\b/i;
+  const TOPIC = /\s*-\s*Topic$/i;
 
-  const usable = candidates
+  const inRange = (c: typeof candidates[number]) => c.durationMs >= 60_000 && c.durationMs <= 600_000;
+  const clean = candidates
     .filter((c) => !NEGATIVES.test(c.title))
-    .filter((c) => c.durationMs >= 60_000 && c.durationMs <= 600_000) // 1-10 min razonable
-    .sort((a, b) => b.viewCount - a.viewCount); // por popularidad
+    .filter(inRange);
+
+  // Separamos Topic vs no-Topic. Si hay no-Topic disponibles, esos son
+  // los que mostramos. El Topic queda como fallback solo si no hay video real.
+  const nonTopic = clean.filter((c) => !TOPIC.test(c.channelTitle));
+  const topicOnly = clean.filter((c) => TOPIC.test(c.channelTitle));
+
+  // Ranking: primero los que tienen video real (ordenados por popularidad),
+  // después los Topic al final (también por popularidad).
+  const usable = [
+    ...nonTopic.sort((a, b) => b.viewCount - a.viewCount),
+    ...topicOnly.sort((a, b) => b.viewCount - a.viewCount),
+  ];
 
   return usable.slice(0, 12).map((c) => {
+    const isTopic = TOPIC.test(c.channelTitle);
     // Parseamos "Artista - Titulo" del título de YouTube si lo tiene formato común
     const dashSplit = c.title.split(/\s+[-–—]\s+/);
     let artist = c.channelTitle.replace(/VEVO$/i, '').replace(/Music$/i, '').trim();
@@ -122,11 +139,10 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
     title = title.replace(/\s*\[(official|video|audio|music|lyric|hd|4k)[^\]]*\]\s*/gi, '').trim();
 
     return {
-      providerId: `${YT_PROVIDER_PREFIX}${c.videoId}`,
+      providerId: `${isTopic ? YT_AUDIO_PROVIDER_PREFIX : YT_PROVIDER_PREFIX}${c.videoId}`,
       title,
       artists: [artist],
       durationMs: c.durationMs,
-      // YouTube thumbnail más grande
       imageUrl: `https://i.ytimg.com/vi/${c.videoId}/hqdefault.jpg`,
       explicit: false,
     } satisfies TrackSearchResult;
@@ -135,16 +151,21 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
 
 /** Detecta si un track viene de YouTube fallback (skip resolver). */
 export function isYoutubeProvidedTrack(track: TrackSearchResult): boolean {
-  return track.providerId.startsWith(YT_PROVIDER_PREFIX);
+  return (
+    track.providerId.startsWith(YT_PROVIDER_PREFIX) ||
+    track.providerId.startsWith(YT_AUDIO_PROVIDER_PREFIX)
+  );
 }
 
 /** Convierte un YT-provided track a ResolvedTrack sin pasar por resolver. */
 export function ytTrackToResolved(track: TrackSearchResult): ResolvedTrack {
+  const isTopicAudio = track.providerId.startsWith(YT_AUDIO_PROVIDER_PREFIX);
+  const prefix = isTopicAudio ? YT_AUDIO_PROVIDER_PREFIX : YT_PROVIDER_PREFIX;
   return {
     ...track,
-    youtubeVideoId: track.providerId.slice(YT_PROVIDER_PREFIX.length),
-    isOfficial: false, // no garantizamos oficialidad cuando viene de fallback
-    hasVideo: true,    // asumimos video; si es solo audio el visualizer no aplica
+    youtubeVideoId: track.providerId.slice(prefix.length),
+    isOfficial: false,
+    hasVideo: !isTopicAudio, // Topic = solo audio, mostrar visualizer
   };
 }
 
