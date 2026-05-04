@@ -1,5 +1,6 @@
 import type { ResolvedTrack, TrackSearchResult } from './types';
 import { pickBestCandidate, type YoutubeCandidate } from '../utils/youtubeFilter';
+import { cacheYoutubeResolution, getCachedYoutubeResolution } from './supabase';
 
 export const YT_PROVIDER_PREFIX = 'yt:';
 
@@ -150,6 +151,17 @@ export function ytTrackToResolved(track: TrackSearchResult): ResolvedTrack {
 export async function resolveOnYoutube(
   track: TrackSearchResult,
 ): Promise<ResolvedTrack | null> {
+  // Cache hit: si ya resolvimos esta canción antes (cualquier bar, alguna vez),
+  // devolvemos el videoId guardado sin gastar cuota de YouTube API.
+  // Esto es lo que permite escalar — canciones populares se resuelven 1 vez.
+  const cached = await getCachedYoutubeResolution(track.providerId);
+  if (cached) {
+    if (import.meta.env.DEV) {
+      console.log(`[youtube] CACHE HIT for "${track.title}" → ${cached.youtubeVideoId}`);
+    }
+    return { ...track, ...cached };
+  }
+
   // Query LIMPIA — sin "official" en el query, eso sesga a YT a devolver
   // los videos más populares oficiales del artista (aunque no sean la canción
   // pedida). El bonus por "official" se aplica en el scoring, no en la query.
@@ -181,10 +193,14 @@ export async function resolveOnYoutube(
     );
     return null;
   }
-  return {
-    ...track,
+  const resolution = {
     youtubeVideoId: best.candidate.videoId,
     isOfficial: best.isOfficial,
     hasVideo: best.hasVideo,
   };
+
+  // Guardar al cache (fire-and-forget — no esperar para no demorar al user)
+  void cacheYoutubeResolution(track.providerId, resolution);
+
+  return { ...track, ...resolution };
 }

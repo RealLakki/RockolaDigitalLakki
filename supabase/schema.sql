@@ -46,11 +46,12 @@ create index if not exists queue_items_venue_created
   on public.queue_items (venue_id, created_at desc);
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- youtube_resolutions: cache de spotify_id → youtube_video_id
--- (evita re-resolver canciones populares — ahorra cuota de YouTube API)
+-- youtube_resolutions: cache de provider_id (iTunes trackId) → youtube_video_id
+-- (evita re-resolver canciones populares — ahorra cuota de YouTube API,
+-- de 100 unidades a 0 por canción ya cacheada)
 -- ─────────────────────────────────────────────────────────────────────────────
 create table if not exists public.youtube_resolutions (
-  spotify_id text primary key,
+  provider_id text primary key,
   youtube_video_id text not null,
   is_official boolean not null default false,
   has_video boolean not null default true,

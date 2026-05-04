@@ -167,6 +167,59 @@ export async function boostItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/* ────────────────────────── YouTube cache ────────────────────────── */
+
+interface CachedResolution {
+  youtubeVideoId: string;
+  isOfficial: boolean;
+  hasVideo: boolean;
+}
+
+/**
+ * Lee el cache de resolución YouTube para un providerId (iTunes trackId).
+ * Si existe, evita una llamada de 100 unidades de cuota a YouTube API.
+ */
+export async function getCachedYoutubeResolution(
+  providerId: string,
+): Promise<CachedResolution | null> {
+  const { data, error } = await supabase
+    .from('youtube_resolutions')
+    .select('youtube_video_id, is_official, has_video')
+    .eq('provider_id', providerId)
+    .maybeSingle<{ youtube_video_id: string; is_official: boolean; has_video: boolean }>();
+  if (error) {
+    console.warn('[yt-cache] read failed:', error.message);
+    return null;
+  }
+  if (!data) return null;
+  return {
+    youtubeVideoId: data.youtube_video_id,
+    isOfficial: data.is_official,
+    hasVideo: data.has_video,
+  };
+}
+
+/**
+ * Guarda una resolución exitosa al cache. Idempotente — si la canción ya
+ * tenía cache (por race condition), el INSERT con upsert lo actualiza.
+ */
+export async function cacheYoutubeResolution(
+  providerId: string,
+  resolution: CachedResolution,
+): Promise<void> {
+  const { error } = await supabase.from('youtube_resolutions').upsert(
+    {
+      provider_id: providerId,
+      youtube_video_id: resolution.youtubeVideoId,
+      is_official: resolution.isOfficial,
+      has_video: resolution.hasVideo,
+      resolved_at: new Date().toISOString(),
+    },
+    { onConflict: 'provider_id' },
+  );
+  if (error) console.warn('[yt-cache] write failed:', error.message);
+}
+
 /** Revierte un boost: pone boosted=false y manda la canción al final de la cola. */
 export async function unboostItem(id: string, venueId: string): Promise<void> {
   // Busca la posición máxima actual (excluyendo este item) para ponerla al final
