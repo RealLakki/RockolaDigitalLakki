@@ -204,6 +204,70 @@ export function isYoutubeProvidedTrack(track: TrackSearchResult): boolean {
   );
 }
 
+/**
+ * Extrae el videoId de cualquier formato de URL de YouTube.
+ * Soporta: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/shorts/ID,
+ * youtube.com/embed/ID, music.youtube.com/watch?v=ID, m.youtube.com/...
+ */
+export function extractYoutubeVideoId(input: string): string | null {
+  const s = input.trim();
+  if (!s) return null;
+
+  // Si ya parece un videoId puro (11 chars, alfanuméricos + - _)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
+
+  // Patrones de URL típicos
+  const patterns = [
+    /[?&]v=([a-zA-Z0-9_-]{11})/,           // youtube.com/watch?v=XXX
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,      // youtu.be/XXX
+    /\/shorts\/([a-zA-Z0-9_-]{11})/,       // /shorts/XXX
+    /\/embed\/([a-zA-Z0-9_-]{11})/,        // /embed/XXX
+    /\/v\/([a-zA-Z0-9_-]{11})/,            // /v/XXX
+  ];
+  for (const p of patterns) {
+    const m = s.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+/**
+ * Resuelve una URL/videoId de YouTube a un TrackSearchResult listo para agregar.
+ * Para casos donde el search de YouTube no encuentra la canción (catálogo nicho)
+ * y el usuario tiene el link directo del video oficial.
+ */
+export async function youtubeUrlToTrack(input: string): Promise<TrackSearchResult | null> {
+  const videoId = extractYoutubeVideoId(input);
+  if (!videoId) return null;
+
+  const candidates = await getVideoDetails([videoId]);
+  if (candidates.length === 0) return null;
+
+  const c = candidates[0];
+  const TOPIC = /\s*-\s*Topic$/i;
+  const isTopic = TOPIC.test(c.channelTitle);
+
+  // Parseamos "Artista - Titulo" del título
+  const dashSplit = c.title.split(/\s+[-–—]\s+/);
+  let artist = c.channelTitle.replace(/VEVO$/i, '').replace(/Music$/i, '').trim();
+  let title = c.title;
+  if (dashSplit.length >= 2) {
+    artist = dashSplit[0].trim();
+    title = dashSplit.slice(1).join(' - ').trim();
+  }
+  title = title.replace(/\s*\((official|video|audio|music|lyric|hd|4k)[^)]*\)\s*/gi, '').trim();
+  title = title.replace(/\s*\[(official|video|audio|music|lyric|hd|4k)[^\]]*\]\s*/gi, '').trim();
+
+  return {
+    providerId: `${isTopic ? YT_AUDIO_PROVIDER_PREFIX : YT_PROVIDER_PREFIX}${videoId}`,
+    title,
+    artists: [artist],
+    durationMs: c.durationMs,
+    imageUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+    explicit: false,
+  };
+}
+
 /** Convierte un YT-provided track a ResolvedTrack sin pasar por resolver. */
 export function ytTrackToResolved(track: TrackSearchResult): ResolvedTrack {
   const isTopicAudio = track.providerId.startsWith(YT_AUDIO_PROVIDER_PREFIX);

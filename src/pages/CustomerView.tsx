@@ -18,7 +18,7 @@ import { CantinaLogo } from '../components/common/CantinaLogo';
 import { EmptyState } from '../components/common/EmptyState';
 import { NeonButton } from '../components/common/NeonButton';
 import { enqueueTrack } from '../lib/supabase';
-import { isYoutubeProvidedTrack, resolveOnYoutube, ytTrackToResolved } from '../lib/youtube';
+import { extractYoutubeVideoId, isYoutubeProvidedTrack, resolveOnYoutube, youtubeUrlToTrack, ytTrackToResolved } from '../lib/youtube';
 import { useYoutubeFallback } from '../hooks/useYoutubeFallback';
 import type { AlbumResult, ArtistResult } from '../lib/itunes';
 import { getClientId, getClientName, setClientName } from '../utils/formatters';
@@ -288,7 +288,7 @@ function HomeView({
             })}
 
             {!sLoading && (
-              <div className="pt-3">
+              <div className="pt-3 space-y-3">
                 {!showFallbackResults ? (
                   <NeonButton
                     size="sm"
@@ -324,6 +324,8 @@ function HomeView({
                     </div>
                   </>
                 )}
+
+                <YoutubeUrlInput onAddTrack={onAddTrack} />
               </div>
             )}
           </div>
@@ -428,6 +430,77 @@ function AlbumView({
         })}
       </div>
     </>
+  );
+}
+
+/** Input para pegar URL de YouTube directo. Útil cuando ni iTunes ni el
+ * search de YouTube encuentran la canción (catálogo nicho, releases nuevos). */
+function YoutubeUrlInput({
+  onAddTrack,
+}: {
+  onAddTrack: (t: TrackSearchResult) => Promise<void>;
+}) {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const valid = !!extractYoutubeVideoId(url);
+
+  const handleAdd = async () => {
+    if (!valid || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const track = await youtubeUrlToTrack(url);
+      if (!track) {
+        setError('No pude leer ese link. Verifica que sea un video válido.');
+        return;
+      }
+      await onAddTrack(track);
+      setUrl('');
+    } catch (e) {
+      console.error('[yt-url]', e);
+      setError('Error al procesar el link.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="rounded-xl p-3"
+      style={{
+        background: 'rgba(15,13,10,0.5)',
+        border: '1px solid rgba(200,155,60,0.18)',
+      }}
+    >
+      <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-2">
+        ¿Tienes el link de YouTube?
+      </p>
+      <div className="flex gap-2">
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => { setUrl(e.target.value); setError(null); }}
+          placeholder="https://youtube.com/watch?v=..."
+          className="flex-1 bg-base-card/60 border border-base-border rounded-lg px-3 py-2 text-xs text-ink placeholder:text-ink-dim outline-none focus:border-gold/50 font-mono"
+          disabled={loading}
+        />
+        <NeonButton
+          size="sm"
+          variant="primary"
+          onClick={handleAdd}
+          disabled={!valid}
+          loading={loading}
+        >
+          Agregar
+        </NeonButton>
+      </div>
+      {error && <p className="text-danger text-xs mt-2">{error}</p>}
+      <p className="text-ink-dim text-[10px] mt-2 leading-snug">
+        Pega el enlace de un video y se agrega directo a la cola.
+      </p>
+    </div>
   );
 }
 
