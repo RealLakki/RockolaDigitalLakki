@@ -54,7 +54,7 @@ export async function itunesSearch(
     explicit: opts.allowExplicit === false ? 'No' : 'Yes',
   });
 
-  const res = await fetch(`https://itunes.apple.com/search?${params}`);
+  const res = await fetch(`https://itunes.apple.com/search?${params}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`iTunes search failed: ${res.status}`);
   const data: ITunesResponse = await res.json();
 
@@ -139,7 +139,7 @@ export async function itunesSearchArtists(
     country: opts.market ?? 'US',
     limit: String(Math.min(opts.limit ?? 8, 25)),
   });
-  const res = await fetch(`https://itunes.apple.com/search?${params}`);
+  const res = await fetch(`https://itunes.apple.com/search?${params}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`iTunes artist search failed: ${res.status}`);
   const data = (await res.json()) as { results: ITunesArtist[] };
   return data.results
@@ -162,7 +162,7 @@ export async function itunesGetArtistAlbums(
     country: opts.market ?? 'US',
     limit: String(Math.min(opts.limit ?? 25, 100)),
   });
-  const res = await fetch(`https://itunes.apple.com/lookup?${params}`);
+  const res = await fetch(`https://itunes.apple.com/lookup?${params}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`iTunes albums lookup failed: ${res.status}`);
   const data = (await res.json()) as { results: Array<ITunesAlbum | ITunesArtist> };
   return data.results
@@ -190,7 +190,7 @@ export async function itunesGetAlbumTracks(
     country: opts.market ?? 'US',
     limit: '60',
   });
-  const res = await fetch(`https://itunes.apple.com/lookup?${params}`);
+  const res = await fetch(`https://itunes.apple.com/lookup?${params}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`iTunes album tracks lookup failed: ${res.status}`);
   const data = (await res.json()) as { results: Array<ITunesTrack & { wrapperType?: string }> };
   return data.results

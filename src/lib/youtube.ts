@@ -100,27 +100,58 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
   const q = query.trim();
   if (!q) return [];
 
-  const ids = await searchVideos(q);
+  // Lowercase + sin acentos — para que YouTube no se confunda con MAYÚSCULAS
+  const queryNorm = q
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+
+  const ids = await searchVideos(queryNorm);
   const candidates = await getVideoDetails(ids);
 
   const NEGATIVES = /\b(karaoke|cover|tutorial|reaction|sped up|slowed|nightcore|8d|bass boosted|mashup|parody)\b/i;
   const TOPIC = /\s*-\s*Topic$/i;
 
+  // Palabras significativas del query (ignorar las muy cortas como "de", "la", "el")
+  const queryWords = queryNorm.split(/\s+/).filter((w) => w.length > 3);
+
+  const norm = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
   const inRange = (c: typeof candidates[number]) => c.durationMs >= 60_000 && c.durationMs <= 600_000;
+
+  // Cuántas palabras del query aparecen en title o channel del candidato
+  const relevanceScore = (c: typeof candidates[number]): number => {
+    const blob = norm(`${c.title} ${c.channelTitle}`);
+    return queryWords.filter((w) => blob.includes(w)).length;
+  };
+
+  // Exigimos al menos 1 palabra significativa del query en title o channel.
+  // Si el query tiene solo palabras cortas, no aplicamos el filtro.
+  const minRelevance = queryWords.length === 0 ? 0 : 1;
+
   const clean = candidates
     .filter((c) => !NEGATIVES.test(c.title))
-    .filter(inRange);
+    .filter(inRange)
+    .filter((c) => relevanceScore(c) >= minRelevance);
 
   // Separamos Topic vs no-Topic. Si hay no-Topic disponibles, esos son
   // los que mostramos. El Topic queda como fallback solo si no hay video real.
   const nonTopic = clean.filter((c) => !TOPIC.test(c.channelTitle));
   const topicOnly = clean.filter((c) => TOPIC.test(c.channelTitle));
 
-  // Ranking: primero los que tienen video real (ordenados por popularidad),
-  // después los Topic al final (también por popularidad).
+  // Ranking dentro de cada grupo: primero por relevancia (cuántas palabras
+  // del query coinciden), después por popularidad como tiebreaker.
+  const rankFn = (a: typeof candidates[number], b: typeof candidates[number]) => {
+    const ra = relevanceScore(a);
+    const rb = relevanceScore(b);
+    if (rb !== ra) return rb - ra;
+    return b.viewCount - a.viewCount;
+  };
+
   const usable = [
-    ...nonTopic.sort((a, b) => b.viewCount - a.viewCount),
-    ...topicOnly.sort((a, b) => b.viewCount - a.viewCount),
+    ...nonTopic.sort(rankFn),
+    ...topicOnly.sort(rankFn),
   ];
 
   // Logs siempre activos para debug en producción — ayudan a calibrar.
