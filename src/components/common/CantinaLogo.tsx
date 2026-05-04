@@ -24,20 +24,25 @@ export function CantinaLogo({ size = 64, className = '', glow = false }: Props) 
           }}
         />
       )}
-      <img
-        src="/logo.png"
-        alt="La Cantina Plus"
-        className="relative w-full h-full object-contain select-none"
-        draggable={false}
-        // clip-path: recorta el cuadrado del PNG al círculo del logo,
-        // eliminando las esquinas negras. mixBlendMode: screen ayuda a
-        // disimular cualquier pixel negro residual dentro del círculo.
-        style={{
-          clipPath: 'circle(48%)',
-          WebkitClipPath: 'circle(48%)',
-          mixBlendMode: 'screen',
-        }}
-      />
+      {/* WebP es ~10x más liviano que PNG. Fallback a PNG por si algún
+          browser ancestral no soporta WebP (raro, pero el <picture>
+          lo maneja sin código extra). */}
+      <picture>
+        <source srcSet="/logo.webp" type="image/webp" />
+        <img
+          src="/logo.png"
+          alt="La Cantina Plus"
+          className="relative w-full h-full object-contain select-none"
+          draggable={false}
+          // clip-path: recorta el cuadrado al círculo del logo,
+          // eliminando las esquinas negras.
+          style={{
+            clipPath: 'circle(48%)',
+            WebkitClipPath: 'circle(48%)',
+            mixBlendMode: 'screen',
+          }}
+        />
+      </picture>
     </div>
   );
 }
