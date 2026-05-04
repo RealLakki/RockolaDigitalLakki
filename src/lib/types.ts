@@ -66,6 +66,31 @@ export const GENRE_KEYWORDS: Record<Genre, string[]> = {
   corridos: ['corridos', 'norteño', 'regional mexican', 'regional mexicano', 'música mexicana', 'musica mexicana'],
 };
 
+/**
+ * Mapeo de nuestros géneros a tags de Last.fm (mucho más granulares que iTunes).
+ * Last.fm tiene tags por canción y artista — son "user-generated" pero los
+ * más populares son confiables. Si el track tiene CUALQUIERA de estos tags,
+ * lo consideramos del género.
+ */
+export const GENRE_LASTFM_TAGS: Record<Genre, string[]> = {
+  reggaeton: ['reggaeton', 'reggaetón', 'perreo', 'urbano latino', 'latin urban', 'trap latino', 'reggaeton colombiano'],
+  salsa: ['salsa', 'salsa colombiana', 'salsa cubana', 'salsa choke'],
+  merengue: ['merengue'],
+  bachata: ['bachata', 'bachata moderna'],
+  champeta: ['champeta', 'champeta urbana'],
+  vallenato: ['vallenato', 'vallenato moderno', 'vallenato romantico'],
+  cumbia: ['cumbia', 'cumbia colombiana', 'cumbia villera', 'cumbia sonidera'],
+  pop: ['pop', 'latin pop', 'pop latino', 'spanish pop', 'pop rock'],
+  rock: ['rock', 'classic rock', 'hard rock', 'metal', 'alternative rock', 'indie rock', 'rock en español', 'rock latino'],
+  electronica: ['electronic', 'electronica', 'electrónica', 'house', 'techno', 'edm', 'dance', 'electro'],
+  hiphop: ['hip-hop', 'hip hop', 'rap', 'rap latino', 'rap español'],
+  rnb: ['r&b', 'rnb', 'soul', 'neo soul'],
+  afrobeats: ['afrobeats', 'afrobeat', 'afro', 'afropop'],
+  dembow: ['dembow', 'dembow dominicano'],
+  banda: ['banda', 'banda sinaloense', 'regional mexicano', 'banda mx'],
+  corridos: ['corridos', 'corridos tumbados', 'norteño', 'narcocorridos', 'corridos belicos', 'sad sierreño', 'sierreño'],
+};
+
 /** Géneros latinos urbanos/tropicales — los que iTunes a veces etiqueta
  * solo como "Latin" / "Música Latina" sin granularidad. */
 const LATIN_NONREGIONAL: Genre[] = [
@@ -109,6 +134,27 @@ export function genreAllowed(
   // Match por keywords
   return allowedGenres.some((ag) =>
     GENRE_KEYWORDS[ag].some((kw) => g.includes(kw)),
+  );
+}
+
+/**
+ * Decide si un track con tags de Last.fm pasa el filtro de allowedGenres.
+ * Más preciso que `genreAllowed` porque Last.fm tiene tags granulares.
+ * - allowedGenres vacío → todo permitido
+ * - Sin tags → fallback a `genreAllowed` con el itunesGenre original
+ * - Con tags → matchea contra GENRE_LASTFM_TAGS de los géneros permitidos
+ */
+export function genreAllowedByTags(
+  lastfmTags: string[],
+  itunesGenre: string | undefined,
+  allowedGenres: Genre[],
+): boolean {
+  if (allowedGenres.length === 0) return true;
+  if (lastfmTags.length === 0) return genreAllowed(itunesGenre, allowedGenres);
+
+  const tagSet = new Set(lastfmTags.map((t) => t.toLowerCase().trim()));
+  return allowedGenres.some((ag) =>
+    GENRE_LASTFM_TAGS[ag].some((tag) => tagSet.has(tag)),
   );
 }
 

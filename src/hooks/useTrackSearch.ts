@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { itunesSearch } from '../lib/itunes';
-import type { Genre, TrackSearchResult } from '../lib/types';
+import { getTrackTagsBulk, isLastfmEnabled } from '../lib/lastfm';
+import { genreAllowedByTags, type Genre, type TrackSearchResult } from '../lib/types';
 
 const DEBOUNCE_MS = 300;
+const FINAL_LIMIT = 12;
 
 export function useTrackSearch(
   query: string,
@@ -14,7 +16,6 @@ export function useTrackSearch(
   const [error, setError] = useState<Error | null>(null);
   const reqIdRef = useRef(0);
 
-  // Estabilizamos la referencia para que cambios irrelevantes no re-disparen
   const genresKey = useMemo(() => allowedGenres.slice().sort().join(','), [allowedGenres]);
 
   useEffect(() => {
@@ -27,14 +28,36 @@ export function useTrackSearch(
     const myId = ++reqIdRef.current;
     setLoading(true);
     setError(null);
+
+    const allowed = genresKey ? (genresKey.split(',') as Genre[]) : [];
+    const useLastfm = allowed.length > 0 && isLastfmEnabled();
+
     const handle = window.setTimeout(() => {
+      // Si vamos a filtrar con Last.fm, NO le pasamos filtro a iTunes — pedimos
+      // todo el set crudo para tener candidatos y filtrar después con tags reales.
       itunesSearch(q, {
-        limit: 12,
+        limit: useLastfm ? 30 : FINAL_LIMIT,
         allowExplicit,
-        allowedGenres: genresKey ? (genresKey.split(',') as Genre[]) : [],
+        allowedGenres: useLastfm ? [] : allowed,
       })
-        .then((r) => {
-          if (reqIdRef.current === myId) setResults(r);
+        .then(async (rawResults) => {
+          if (reqIdRef.current !== myId) return;
+
+          if (!useLastfm) {
+            setResults(rawResults);
+            return;
+          }
+
+          // Enrich con tags de Last.fm
+          const tagBatches = await getTrackTagsBulk(
+            rawResults.map((r) => ({ artist: r.artists[0] ?? '', title: r.title })),
+          );
+          if (reqIdRef.current !== myId) return;
+
+          const filtered = rawResults
+            .filter((r, i) => genreAllowedByTags(tagBatches[i] ?? [], r.genres?.[0], allowed))
+            .slice(0, FINAL_LIMIT);
+          setResults(filtered);
         })
         .catch((e) => {
           if (reqIdRef.current === myId) setError(e as Error);
