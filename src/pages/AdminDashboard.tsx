@@ -1,11 +1,11 @@
-﻿import { Link, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useCallback } from 'react';
 import { useVenue } from '../hooks/useVenue';
 import { useQueue } from '../hooks/useQueue';
 import { QueueManager } from '../components/admin/QueueManager';
 import { enqueueTrack } from '../lib/supabase';
 import { isYoutubeProvidedTrack, resolveOnYoutube, ytTrackToResolved } from '../lib/youtube';
-import type { TrackSearchResult } from '../lib/types';
+import type { TrackSearchResult, Venue } from '../lib/types';
 import { GenreSettings } from '../components/admin/GenreSettings';
 import { VenueSettings } from '../components/admin/VenueSettings';
 import { BlockedSongs } from '../components/admin/BlockedSongs';
@@ -16,10 +16,14 @@ import { CantinaLogo } from '../components/common/CantinaLogo';
 import { NeonButton } from '../components/common/NeonButton';
 import { GlowCard } from '../components/common/GlowCard';
 
+/**
+ * Outer: solo decide si renderizar el panel real. Los hooks (useCallback,
+ * useQueue, etc) viven dentro de DashboardInner que solo se monta cuando
+ * venue ya está cargado — así no violamos rules-of-hooks con early returns.
+ */
 export function AdminDashboard() {
   const { slug } = useParams<{ slug: string }>();
   const { venue, loading, setVenue } = useVenue(slug);
-  const { queued, nowPlaying, refresh: refreshQueue } = useQueue(venue?.id);
 
   if (loading) {
     return (
@@ -37,7 +41,18 @@ export function AdminDashboard() {
     );
   }
 
-  const patchVenue = (patch: Partial<typeof venue>) => setVenue({ ...venue, ...patch });
+  return <DashboardInner venue={venue} setVenue={setVenue} />;
+}
+
+function DashboardInner({
+  venue, setVenue,
+}: {
+  venue: Venue;
+  setVenue: (v: Venue) => void;
+}) {
+  const { queued, nowPlaying, refresh: refreshQueue } = useQueue(venue.id);
+
+  const patchVenue = (patch: Partial<Venue>) => setVenue({ ...venue, ...patch });
 
   const adminAddTrack = useCallback(
     async (track: TrackSearchResult) => {
@@ -47,7 +62,7 @@ export function AdminDashboard() {
           : await resolveOnYoutube(track);
         if (!resolved) return;
         await enqueueTrack({
-          venueId: venue!.id,
+          venueId: venue.id,
           track: resolved,
           requestedBy: 'admin',
           requestedByName: 'Admin',
@@ -57,7 +72,7 @@ export function AdminDashboard() {
         console.error('[admin] add track failed:', e);
       }
     },
-    [venue, refreshQueue],
+    [venue.id, refreshQueue],
   );
 
   return (
