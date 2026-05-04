@@ -167,6 +167,51 @@ export async function boostItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/* ────────────────────────── Analytics ────────────────────────── */
+
+export interface TopTrackRow {
+  providerId: string;
+  title: string;
+  artists: string[];
+  imageUrl: string | null;
+  requestCount: number;
+  lastRequested: string;
+}
+
+interface TopTrackDbRow {
+  provider_id: string;
+  title: string;
+  artists: unknown; // jsonb — viene como string[] o JSON string según supabase-js
+  image_url: string | null;
+  request_count: number;
+  last_requested: string;
+}
+
+/** Top canciones más pedidas en el venue (solo cuenta played/playing). */
+export async function getTopTracks(
+  venueId: string,
+  limit = 20,
+): Promise<TopTrackRow[]> {
+  const { data, error } = await supabase.rpc('top_tracks_for_venue', {
+    p_venue_id: venueId,
+    p_limit: limit,
+  });
+  if (error) throw error;
+  const rows = (data as TopTrackDbRow[] | null) ?? [];
+  return rows.map((r) => ({
+    providerId: r.provider_id,
+    title: r.title,
+    artists: Array.isArray(r.artists)
+      ? (r.artists as string[])
+      : typeof r.artists === 'string'
+        ? (JSON.parse(r.artists) as string[])
+        : [],
+    imageUrl: r.image_url,
+    requestCount: Number(r.request_count),
+    lastRequested: r.last_requested,
+  }));
+}
+
 /* ────────────────────────── YouTube cache ────────────────────────── */
 
 interface CachedResolution {

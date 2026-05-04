@@ -109,6 +109,48 @@ alter table public.queue_items replica identity full;
 alter table public.venues replica identity full;
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- top_tracks_for_venue: ranking de canciones más pedidas (por venue).
+-- Solo cuenta items que SÍ se reprodujeron (status played/playing) — los
+-- 'queued' aún no cuentan como reproducción real, los 'skipped' tampoco.
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace function public.top_tracks_for_venue(
+  p_venue_id uuid,
+  p_limit int default 20
+)
+returns table (
+  provider_id text,
+  title text,
+  artists jsonb,
+  image_url text,
+  request_count bigint,
+  last_requested timestamptz
+)
+language sql
+stable
+as $$
+  select
+    track->>'providerId' as provider_id,
+    track->>'title' as title,
+    track->'artists' as artists,
+    track->>'imageUrl' as image_url,
+    count(*)::bigint as request_count,
+    max(created_at) as last_requested
+  from public.queue_items
+  where venue_id = p_venue_id
+    and status in ('played', 'playing')
+  group by
+    track->>'providerId',
+    track->>'title',
+    track->'artists',
+    track->>'imageUrl'
+  order by request_count desc, last_requested desc
+  limit p_limit;
+$$;
+
+-- Permite que el frontend llame esta función con la anon key
+grant execute on function public.top_tracks_for_venue(uuid, int) to anon, authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Seed: venue de prueba con slug "demo"
 -- ─────────────────────────────────────────────────────────────────────────────
 insert into public.venues (slug, name, allowed_genres, request_cooldown_sec, tip_price_cop)

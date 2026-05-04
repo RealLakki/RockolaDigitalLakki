@@ -6,6 +6,7 @@ import { GenreSettings } from '../components/admin/GenreSettings';
 import { VenueSettings } from '../components/admin/VenueSettings';
 import { BlockedSongs } from '../components/admin/BlockedSongs';
 import { QrCodeCard } from '../components/admin/QrCodeCard';
+import { TopTracksCard } from '../components/admin/TopTracksCard';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
 import { CantinaLogo } from '../components/common/CantinaLogo';
 import { NeonButton } from '../components/common/NeonButton';
@@ -82,6 +83,7 @@ export function AdminDashboard() {
             />
           </GlowCard>
 
+          <TopTracksCard venueId={venue.id} />
           <GenreSettings venue={venue} onUpdate={patchVenue} />
           <BlockedSongs venue={venue} onUpdate={patchVenue} />
         </section>
