@@ -62,35 +62,48 @@ export const GENRE_KEYWORDS: Record<Genre, string[]> = {
   rnb: ['r&b', 'soul', 'r&b/soul'],
   afrobeats: ['afrobeats', 'afro', 'african'],
   dembow: ['dembow'],
-  banda: ['banda', 'regional mexican', 'regional mexicano'],
-  corridos: ['corridos', 'norteño', 'regional mexican'],
+  banda: ['banda', 'regional mexican', 'regional mexicano', 'música mexicana', 'musica mexicana'],
+  corridos: ['corridos', 'norteño', 'regional mexican', 'regional mexicano', 'música mexicana', 'musica mexicana'],
 };
 
-/** Géneros considerados "latinos" — usados como fallback cuando iTunes
- * devuelve solo "Latin" o "Música latina" sin más detalle. */
-const LATIN_GENRES: Genre[] = [
+/** Géneros latinos urbanos/tropicales — los que iTunes a veces etiqueta
+ * solo como "Latin" / "Música Latina" sin granularidad. */
+const LATIN_NONREGIONAL: Genre[] = [
   'reggaeton', 'salsa', 'merengue', 'bachata', 'champeta',
-  'vallenato', 'cumbia', 'dembow', 'banda', 'corridos',
+  'vallenato', 'cumbia', 'dembow',
 ];
+
+/** Géneros regionales mexicanos — iTunes los etiqueta como "Música Mexicana"
+ * o "Regional Mexican", NUNCA como "Latin" puro. */
+const REGIONAL_MEXICAN_GENRES: Genre[] = ['banda', 'corridos'];
 
 /**
  * Decide si un primaryGenreName de iTunes pasa el filtro de allowedGenres.
  * - allowedGenres vacío → todo permitido
- * - "Latin" / "Música latina" (genérico) → permitido si admin permite ALGÚN
- *   género latino
- * - Cualquier otro: matchea por substring contra GENRE_KEYWORDS
+ * - Sin género en iTunes + filtros activos → RECHAZAR (no podemos confirmar)
+ * - "Música Mexicana" / "Regional Mexican" → solo si admin tiene banda/corridos
+ * - "Latin" / "Música Latina" puro → solo si admin tiene latino NO-regional
+ *   (banda/corridos no aplican porque iTunes los etiqueta específicamente)
+ * - Cualquier otro → match por substring contra GENRE_KEYWORDS
  */
 export function genreAllowed(
   itunesGenre: string | undefined,
   allowedGenres: Genre[],
 ): boolean {
   if (allowedGenres.length === 0) return true;
-  if (!itunesGenre) return true; // sin info → benefit of the doubt
+  if (!itunesGenre) return false;
   const g = itunesGenre.toLowerCase();
 
-  // Caso "Latin" puro (ambiguo) → permitir si admin acepta algún género latino
+  // Regional Mexicano explícito (banda, corridos, norteño)
+  if (/regional mexican(o)?|música mexicana|musica mexicana/.test(g)) {
+    return allowedGenres.some((ag) => REGIONAL_MEXICAN_GENRES.includes(ag));
+  }
+
+  // Latin / Música Latina puro (ambiguo) → solo permitir si admin tiene un
+  // género latino NO-regional. iTunes nunca etiqueta banda/corridos como
+  // "Latin" puro; les pone "Música Mexicana".
   if (/^(latin|música latina|musica latina)$/.test(g)) {
-    return allowedGenres.some((ag) => LATIN_GENRES.includes(ag));
+    return allowedGenres.some((ag) => LATIN_NONREGIONAL.includes(ag));
   }
 
   // Match por keywords
