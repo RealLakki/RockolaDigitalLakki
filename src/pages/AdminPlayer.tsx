@@ -7,6 +7,7 @@ import { useFullscreen } from '../hooks/useFullscreen';
 import { setItemStatus } from '../lib/supabase';
 import { Visualizer } from '../components/player/Visualizer';
 import { NextUpStrip } from '../components/player/NextUpStrip';
+import { PlayerQrPanel } from '../components/player/PlayerQrPanel';
 import { NeonButton } from '../components/common/NeonButton';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
 import { CantinaLogo } from '../components/common/CantinaLogo';
@@ -281,6 +282,10 @@ function PlayerSurface({ venue }: { venue: Venue }) {
           <Visualizer imageUrl={nowPlaying?.track.imageUrl} active={active.state.isPlaying} />
         </div>
       )}
+
+      {/* QR panel: solo visible cuando ya arrancó el reproductor.
+          Es lo que ven los clientes desde sus mesas para escanear. */}
+      {!showOverlay && <PlayerQrPanel slug={venue.slug} size={180} />}
 
       {showOverlay && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-base/95 backdrop-blur-xl">
