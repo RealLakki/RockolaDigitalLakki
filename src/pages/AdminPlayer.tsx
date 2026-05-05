@@ -114,9 +114,18 @@ function PlayerSurface({ venue }: { venue: Venue }) {
 
     if (loadedRef.current[activeSlot] === vid) return;
     console.log('[player] loading', vid, 'in slot', activeSlot);
-    active.controls.setVolume(muted ? 0 : TARGET_VOLUME);
+    // Silenciar primero para evitar que el video anterior cargado en el slot
+    // suene un fragmento antes de que el nuevo tome control (audio leak)
+    active.controls.setVolume(0);
     active.controls.load(vid, true);
     loadedRef.current[activeSlot] = vid;
+    // Restaurar volumen target tras delay — el nuevo video ya tomó control
+    const targetVol = muted ? 0 : TARGET_VOLUME;
+    window.setTimeout(() => {
+      if (loadedRef.current[activeSlot] === vid) {
+        active.controls.setVolume(targetVol);
+      }
+    }, 400);
     promotingRef.current = null;
     preloadedNextRef.current = null;
   }, [active.state.isReady, nowPlaying, active.controls, showOverlay, activeSlot, muted]);
@@ -285,8 +294,9 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   }, [active, nowPlaying, activeSlot, refresh]);
 
   // ─── Stuck detection: si currentTime no avanza, asumimos bloqueo silencioso ───
-  // (YouTube no siempre dispara onError para bloqueos de copyright tipo
-  // "Video no disponible — contenido de LatinAutor". Este es el fallback.)
+  // Detecta el videoId que ESTÁ realmente cargado en el slot active (puede no
+  // coincidir con nowPlaying durante el window de switch tras un crossfade).
+  // Para skipear, busca el item correcto entre nowPlaying/queued con ese videoId.
   const stuckRef = useRef<{ vid: string | null; lastTime: number; lastUpdate: number; loadedAt: number }>({
     vid: null,
     lastTime: 0,
@@ -294,49 +304,62 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     loadedAt: Date.now(),
   });
   useEffect(() => {
-    if (!nowPlaying || showOverlay) {
+    if (showOverlay) {
       stuckRef.current.vid = null;
       return;
     }
-    const vid = nowPlaying.track.youtubeVideoId;
+    const slotVid = loadedRef.current[activeSlot];
+    if (!slotVid) {
+      stuckRef.current.vid = null;
+      return;
+    }
     const now = Date.now();
     const t = active.state.currentTimeSec;
 
-    // Reset cuando cambia el video
-    if (stuckRef.current.vid !== vid) {
-      stuckRef.current = { vid, lastTime: 0, lastUpdate: now, loadedAt: now };
+    // Reset cuando cambia el video del slot
+    if (stuckRef.current.vid !== slotVid) {
+      stuckRef.current = { vid: slotVid, lastTime: 0, lastUpdate: now, loadedAt: now };
       return;
     }
 
-    // Si avanzó el tiempo, todo bien — actualizar referencia
+    // Si avanzó el tiempo, todo bien
     if (t > stuckRef.current.lastTime + 0.3) {
       stuckRef.current.lastTime = t;
       stuckRef.current.lastUpdate = now;
       return;
     }
 
-    // Si está pausado intencionalmente Y ya arrancó, no es stuck
+    // Pausa intencional (ya arrancó y user pausó)
     if (!active.state.isPlaying && t > 0) return;
 
     const sinceLoaded = now - stuckRef.current.loadedAt;
     const sinceProgress = now - stuckRef.current.lastUpdate;
 
-    // Caso 1: nunca arrancó (currentTime sigue en 0 después de 3s)
-    // Caso 2: estaba reproduciendo y se atascó por 3s sin avanzar
     if ((t === 0 && sinceLoaded > 3000) || (t > 0 && sinceProgress > 3000)) {
+      // Buscar el item correspondiente al videoId cargado
+      const stuckItem =
+        nowPlaying?.track.youtubeVideoId === slotVid
+          ? nowPlaying
+          : queued.find((q) => q.track.youtubeVideoId === slotVid);
+
+      if (!stuckItem) {
+        console.warn('[player] stuck but no matching item found for', slotVid);
+        return;
+      }
+
       console.warn(
-        `[player] video stuck (t=${t}, sinceLoaded=${sinceLoaded}ms, sinceProgress=${sinceProgress}ms), auto-skipping`,
+        `[player] stuck "${stuckItem.track.title}" (t=${t}, sinceLoaded=${sinceLoaded}ms), auto-skipping`,
       );
       stuckRef.current.vid = null; // evitar doble skip
-      void setItemStatus(nowPlaying.id, 'skipped').then(() => {
+      void setItemStatus(stuckItem.id, 'skipped').then(() => {
         loadedRef.current[activeSlot] = null;
         preloadedNextRef.current = null;
         void refresh();
       });
     }
   }, [
-    active.state.currentTimeSec, active.state.isPlaying, nowPlaying, showOverlay,
-    activeSlot, refresh,
+    active.state.currentTimeSec, active.state.isPlaying, nowPlaying, queued,
+    showOverlay, activeSlot, refresh,
   ]);
 
   // ─── Recibe comandos remotos del admin (cross-tab via Supabase Broadcast) ───

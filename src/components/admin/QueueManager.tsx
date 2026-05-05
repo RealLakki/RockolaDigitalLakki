@@ -76,6 +76,18 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefre
             </NeonButton>
             <NeonButton
               size="sm"
+              variant="ghost"
+              onClick={() => {
+                blockTrack(nowPlaying.track.providerId);
+                sendCommand('skip');
+                void after(setItemStatus(nowPlaying.id, 'skipped'));
+              }}
+              title="Bloquear esta canción para siempre + saltar"
+            >
+              ⛔
+            </NeonButton>
+            <NeonButton
+              size="sm"
               variant="danger"
               onClick={() => {
                 sendCommand('skip');
