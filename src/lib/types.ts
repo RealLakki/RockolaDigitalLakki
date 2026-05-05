@@ -156,11 +156,27 @@ export function genreAllowed(
 }
 
 /**
+ * Word-boundary match: mi tag aparece como palabra dentro del trackTag.
+ * Ej: myTag="salsa" matchea con "salsa cubana" o "salsa choke", pero
+ * no matchea con "salsapuerca" (sin word boundary).
+ */
+function tagMatches(myTag: string, trackTag: string): boolean {
+  const a = myTag.toLowerCase().trim();
+  const b = trackTag.toLowerCase().trim();
+  if (a === b) return true;
+  // Escape regex special chars
+  const safe = a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(^|\\s|[/&,-])${safe}(\\s|[/&,-]|$)`, 'i');
+  return re.test(b);
+}
+
+/**
  * Decide si un track con tags de Last.fm pasa el filtro de allowedGenres.
- * Más preciso que `genreAllowed` porque Last.fm tiene tags granulares.
  * - allowedGenres vacío → todo permitido
  * - Sin tags → fallback a `genreAllowed` con el itunesGenre original
- * - Con tags → matchea contra GENRE_LASTFM_TAGS de los géneros permitidos
+ * - Con tags → matchea word-boundary contra GENRE_LASTFM_TAGS
+ *
+ * Devuelve también un debug object para logging.
  */
 export function genreAllowedByTags(
   lastfmTags: string[],
@@ -170,10 +186,34 @@ export function genreAllowedByTags(
   if (allowedGenres.length === 0) return true;
   if (lastfmTags.length === 0) return genreAllowed(itunesGenre, allowedGenres);
 
-  const tagSet = new Set(lastfmTags.map((t) => t.toLowerCase().trim()));
   return allowedGenres.some((ag) =>
-    GENRE_LASTFM_TAGS[ag].some((tag) => tagSet.has(tag)),
+    GENRE_LASTFM_TAGS[ag].some((myTag) =>
+      lastfmTags.some((trackTag) => tagMatches(myTag, trackTag)),
+    ),
   );
+}
+
+/** Versión que devuelve además qué género matcheó — útil para logs y para
+ * filtrar el house-filler con la misma lógica. */
+export function genreMatchedFor(
+  lastfmTags: string[],
+  itunesGenre: string | undefined,
+  allowedGenres: Genre[],
+): { allowed: boolean; matchedGenre?: Genre; matchedTag?: string } {
+  if (allowedGenres.length === 0) return { allowed: true };
+  if (lastfmTags.length === 0) {
+    return { allowed: genreAllowed(itunesGenre, allowedGenres) };
+  }
+  for (const ag of allowedGenres) {
+    for (const myTag of GENRE_LASTFM_TAGS[ag]) {
+      for (const trackTag of lastfmTags) {
+        if (tagMatches(myTag, trackTag)) {
+          return { allowed: true, matchedGenre: ag, matchedTag: trackTag };
+        }
+      }
+    }
+  }
+  return { allowed: false };
 }
 
 /** Resultado normalizado de una búsqueda (sea Spotify o cualquier otro provider). */

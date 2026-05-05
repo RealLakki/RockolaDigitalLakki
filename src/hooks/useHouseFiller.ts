@@ -1,18 +1,41 @@
 import { useEffect, useRef } from 'react';
 import { getRandomHouseTrack } from '../lib/houseArtists';
+import { getTrackTags, isLastfmEnabled } from '../lib/lastfm';
 import { resolveOnYoutube } from '../lib/youtube';
 import { enqueueTrack } from '../lib/supabase';
-import type { QueueItem, ResolvedTrack } from '../lib/types';
+import { genreMatchedFor, type Genre, type QueueItem, type ResolvedTrack } from '../lib/types';
 
 interface Args {
   venueId: string;
   queued: QueueItem[];
   nowPlaying: QueueItem | null;
+  /** Si está poblado, las canciones del filler se filtran por estos géneros. */
+  allowedGenres?: Genre[];
   /** Si false, no auto-fill (modo silencio voluntario). */
   enabled?: boolean;
   /** Cuántos ms esperar antes de inyectar el pre-fetched cuando hay silencio
    *  (margen para que admin meta algo manualmente). Default 1500ms. */
   silenceMs?: number;
+}
+
+/** Verifica que un track candidato del house-filler pase el filtro de género
+ * si hay filtros activos. Si Last.fm no está habilitado, no podemos filtrar
+ * y dejamos pasar (mejor 1 canción "off-genre" que silencio total). */
+async function passesFilter(
+  artist: string,
+  title: string,
+  itunesGenre: string | undefined,
+  allowedGenres: Genre[],
+): Promise<boolean> {
+  if (allowedGenres.length === 0) return true;
+  if (!isLastfmEnabled()) return true;
+  try {
+    const tags = await getTrackTags(artist, title);
+    const result = genreMatchedFor(tags, itunesGenre, allowedGenres);
+    return result.allowed;
+  } catch {
+    return true; // fail-open
+  }
 }
 
 /**
@@ -31,9 +54,12 @@ export function useHouseFiller({
   venueId,
   queued,
   nowPlaying,
+  allowedGenres = [],
   enabled = true,
   silenceMs = 1500,
 }: Args) {
+  // Memo del key para deps stable
+  const genresKey = allowedGenres.slice().sort().join(',');
   const prefetchedRef = useRef<ResolvedTrack | null>(null);
   const fetchingRef = useRef(false);
   const enqueueTimerRef = useRef<number | null>(null);
@@ -53,9 +79,28 @@ export function useHouseFiller({
     console.log('[house-filler] pre-fetching backup track...');
     void (async () => {
       try {
-        const track = await getRandomHouseTrack(new Set());
+        // Hasta 5 intentos para encontrar uno que pase el filtro de género
+        let track = null;
+        let attempts = 0;
+        while (attempts < 5) {
+          attempts++;
+          const candidate = await getRandomHouseTrack(new Set());
+          if (!candidate) continue;
+          const ok = await passesFilter(
+            candidate.artists[0] ?? '',
+            candidate.title,
+            candidate.genres?.[0],
+            allowedGenres,
+          );
+          if (ok) {
+            track = candidate;
+            break;
+          }
+          console.log('[house-filler] candidate filtered:', candidate.title, 'by', candidate.artists[0]);
+        }
+
         if (!track) {
-          console.warn('[house-filler] pre-fetch: no track found');
+          console.warn('[house-filler] pre-fetch: no candidate passed filter after', attempts, 'tries');
           return;
         }
         const resolved = await resolveOnYoutube(track);
@@ -71,7 +116,8 @@ export function useHouseFiller({
         fetchingRef.current = false;
       }
     })();
-  }, [queued.length, enabled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queued.length, enabled, genresKey]);
 
   // ─── Inject cuando hay silencio ───
   useEffect(() => {

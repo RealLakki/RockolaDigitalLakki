@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { itunesSearch } from '../lib/itunes';
 import { getTrackTagsBulk, isLastfmEnabled } from '../lib/lastfm';
-import { genreAllowedByTags, type Genre, type TrackSearchResult } from '../lib/types';
+import { genreMatchedFor, type Genre, type TrackSearchResult } from '../lib/types';
 
 const DEBOUNCE_MS = 300;
 const FINAL_LIMIT = 12;
@@ -54,10 +54,32 @@ export function useTrackSearch(
           );
           if (reqIdRef.current !== myId) return;
 
-          const filtered = rawResults
-            .filter((r, i) => genreAllowedByTags(tagBatches[i] ?? [], r.genres?.[0], allowed))
-            .slice(0, FINAL_LIMIT);
-          setResults(filtered);
+          const filtered: TrackSearchResult[] = [];
+          const rejected: Array<{ track: string; tags: string[]; itunes?: string }> = [];
+
+          rawResults.forEach((r, i) => {
+            const tags = tagBatches[i] ?? [];
+            const itunesGenre = r.genres?.[0];
+            const result = genreMatchedFor(tags, itunesGenre, allowed);
+            if (result.allowed) {
+              filtered.push(r);
+            } else {
+              rejected.push({
+                track: `${r.artists[0]} - ${r.title}`,
+                tags,
+                itunes: itunesGenre,
+              });
+            }
+          });
+
+          console.log(
+            `[genre-filter] "${q}" allowed=[${allowed.join(',')}]: ${filtered.length} pass, ${rejected.length} rejected`,
+          );
+          if (rejected.length > 0) {
+            console.log('[genre-filter] rejected:', rejected);
+          }
+
+          setResults(filtered.slice(0, FINAL_LIMIT));
         })
         .catch((e) => {
           if (reqIdRef.current === myId) setError(e as Error);

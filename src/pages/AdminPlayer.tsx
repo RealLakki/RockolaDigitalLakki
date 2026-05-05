@@ -272,6 +272,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     venueId: venue.id,
     queued,
     nowPlaying,
+    allowedGenres: venue.allowedGenres,
     enabled: !showOverlay,
     silenceMs: 1500,
   });
