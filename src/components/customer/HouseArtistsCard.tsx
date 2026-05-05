@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import anime from 'animejs';
 import { itunesSearchArtists, type ArtistResult } from '../../lib/itunes';
+import { HOUSE_ARTISTS } from '../../lib/houseArtists';
 import { GlowCard } from '../common/GlowCard';
 
 interface Props {
@@ -10,17 +11,7 @@ interface Props {
 /**
  * Lista de "Las de siempre" — artistas favoritos del bar. Click en cualquiera
  * te lleva a su perfil para ver todas sus canciones sin tener que buscar.
- *
- * Lista hardcoded para La Cantina Plus. En el futuro: configurable por venue.
  */
-const HOUSE_ARTISTS = [
-  { name: 'Charrito Negro', searchTerm: 'Charrito Negro' },
-  { name: 'Luis Alberto Posada', searchTerm: 'Luis Alberto Posada' },
-  { name: 'Yeison Jiménez', searchTerm: 'Yeison Jimenez' },
-  { name: 'Andariego', searchTerm: 'Andariego' },
-  { name: 'Paola Jara', searchTerm: 'Paola Jara' },
-  { name: 'Jessi Uribe', searchTerm: 'Jessi Uribe' },
-];
 
 export function HouseArtistsCard({ onSelectArtist }: Props) {
   const [resolved, setResolved] = useState<Map<string, ArtistResult | null>>(new Map());

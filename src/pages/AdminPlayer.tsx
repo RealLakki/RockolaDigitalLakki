@@ -5,6 +5,7 @@ import { useQueue } from '../hooks/useQueue';
 import { useYoutubePlayer } from '../hooks/useYoutubePlayer';
 import { useFullscreen } from '../hooks/useFullscreen';
 import { useReceivePlayerCommand } from '../hooks/usePlayerControl';
+import { useHouseFiller } from '../hooks/useHouseFiller';
 import { setItemStatus } from '../lib/supabase';
 import { Visualizer } from '../components/player/Visualizer';
 import { NextUpStrip } from '../components/player/NextUpStrip';
@@ -257,6 +258,32 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     });
   }, [active]);
 
+  // ─── Auto-fill con "Las de siempre" cuando la cola se queda vacía ───
+  useHouseFiller({
+    venueId: venue.id,
+    queued,
+    nowPlaying,
+    enabled: !showOverlay,
+    silenceMs: 4000,
+  });
+
+  // ─── Auto-skip cuando YouTube bloquea el video ───
+  // Códigos 100 (no existe), 101/150 (embed deshabilitado/copyright/región)
+  useEffect(() => {
+    return active.onError((code) => {
+      if (code === 100 || code === 101 || code === 150) {
+        console.warn('[player] video blocked/unavailable, skipping. Code:', code);
+        if (nowPlaying) {
+          void setItemStatus(nowPlaying.id, 'skipped').then(() => {
+            loadedRef.current[activeSlot] = null;
+            preloadedNextRef.current = null;
+            void refresh();
+          });
+        }
+      }
+    });
+  }, [active, nowPlaying, activeSlot, refresh]);
+
   // ─── Recibe comandos remotos del admin (cross-tab via Supabase Broadcast) ───
   useReceivePlayerCommand(venue.id, (cmd) => {
     if (showOverlay) return; // ignorar comandos antes de iniciar reproductor
@@ -340,17 +367,9 @@ function PlayerSurface({ venue }: { venue: Venue }) {
         </div>
       )}
 
-      {/* QR panel: se oculta junto con el HUD por inactividad. */}
-      {!showOverlay && (
-        <div
-          className={[
-            'transition-opacity duration-500',
-            hudVisible ? 'opacity-100' : 'opacity-0 pointer-events-none',
-          ].join(' ')}
-        >
-          <PlayerQrPanel slug={venue.slug} size={180} />
-        </div>
-      )}
+      {/* QR panel: SIEMPRE visible (no se oculta con el HUD). En la esquina
+          inferior derecha para que clientes lo escaneen desde sus mesas. */}
+      {!showOverlay && <PlayerQrPanel slug={venue.slug} size={130} />}
 
       {showOverlay && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-base/95 backdrop-blur-xl">

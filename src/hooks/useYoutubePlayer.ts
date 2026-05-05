@@ -86,10 +86,12 @@ export function useYoutubePlayer(): {
   state: PlayerState;
   controls: PlayerControls;
   onEnded: (cb: () => void) => () => void;
+  onError: (cb: (code: number) => void) => () => void;
 } {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YT.Player | null>(null);
   const endedHandlersRef = useRef<Set<() => void>>(new Set());
+  const errorHandlersRef = useRef<Set<(code: number) => void>>(new Set());
   const tickRef = useRef<number | null>(null);
   const [state, setState] = useState<PlayerState>({
     isReady: false,
@@ -151,7 +153,13 @@ export function useYoutubePlayer(): {
             }
           },
           onError: (e) => {
+            // Códigos comunes:
+            // 2  = invalid parameter
+            // 5  = HTML5 player error
+            // 100 = video not found
+            // 101/150 = embed disabled (bloqueado por copyright/región)
             console.error('[yt-player] error code:', e.data);
+            errorHandlersRef.current.forEach((cb) => cb(Number(e.data)));
           },
         },
       });
@@ -228,5 +236,10 @@ export function useYoutubePlayer(): {
     return () => { endedHandlersRef.current.delete(cb); };
   };
 
-  return { containerRef, state, controls, onEnded };
+  const onError = (cb: (code: number) => void) => {
+    errorHandlersRef.current.add(cb);
+    return () => { errorHandlersRef.current.delete(cb); };
+  };
+
+  return { containerRef, state, controls, onEnded, onError };
 }

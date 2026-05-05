@@ -43,24 +43,21 @@ export function PlayerQrPanel({ slug, size = 180 }: Props) {
   return (
     <div
       ref={cardRef}
-      className="absolute top-6 right-6 z-30 rounded-2xl p-4 flex flex-col items-center gap-2"
+      className="fixed bottom-4 right-4 z-40 rounded-xl p-2.5 flex flex-col items-center gap-1.5"
       style={{
-        background: 'rgba(15, 13, 10, 0.78)',
+        background: 'rgba(15, 13, 10, 0.85)',
         border: '1px solid rgba(200, 155, 60, 0.4)',
-        boxShadow: '0 0 24px rgba(200, 155, 60, 0.25), 0 12px 40px rgba(0,0,0,0.5)',
+        boxShadow: '0 0 18px rgba(200, 155, 60, 0.22), 0 10px 30px rgba(0,0,0,0.5)',
         backdropFilter: 'blur(16px)',
         opacity: 0,
       }}
     >
-      <p className="text-gold font-heading uppercase tracking-[0.18em] text-[10px]">
+      <p className="text-gold font-heading uppercase tracking-[0.18em] text-[9px]">
         Pide tu canción
       </p>
-      <div className="bg-[#F5F0E8] rounded-lg p-2">
+      <div className="bg-[#F5F0E8] rounded-md p-1.5">
         <canvas ref={canvasRef} />
       </div>
-      <p className="text-ink-mute text-[10px] uppercase tracking-wider font-heading">
-        Escanea con tu celular
-      </p>
     </div>
   );
 }
