@@ -284,6 +284,61 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     });
   }, [active, nowPlaying, activeSlot, refresh]);
 
+  // ─── Stuck detection: si currentTime no avanza, asumimos bloqueo silencioso ───
+  // (YouTube no siempre dispara onError para bloqueos de copyright tipo
+  // "Video no disponible — contenido de LatinAutor". Este es el fallback.)
+  const stuckRef = useRef<{ vid: string | null; lastTime: number; lastUpdate: number; loadedAt: number }>({
+    vid: null,
+    lastTime: 0,
+    lastUpdate: Date.now(),
+    loadedAt: Date.now(),
+  });
+  useEffect(() => {
+    if (!nowPlaying || showOverlay) {
+      stuckRef.current.vid = null;
+      return;
+    }
+    const vid = nowPlaying.track.youtubeVideoId;
+    const now = Date.now();
+    const t = active.state.currentTimeSec;
+
+    // Reset cuando cambia el video
+    if (stuckRef.current.vid !== vid) {
+      stuckRef.current = { vid, lastTime: 0, lastUpdate: now, loadedAt: now };
+      return;
+    }
+
+    // Si avanzó el tiempo, todo bien — actualizar referencia
+    if (t > stuckRef.current.lastTime + 0.3) {
+      stuckRef.current.lastTime = t;
+      stuckRef.current.lastUpdate = now;
+      return;
+    }
+
+    // Si está pausado intencionalmente Y ya arrancó, no es stuck
+    if (!active.state.isPlaying && t > 0) return;
+
+    const sinceLoaded = now - stuckRef.current.loadedAt;
+    const sinceProgress = now - stuckRef.current.lastUpdate;
+
+    // Caso 1: nunca arrancó (currentTime sigue en 0 después de 8s)
+    // Caso 2: estaba reproduciendo y se atascó por 8s sin avanzar
+    if ((t === 0 && sinceLoaded > 8000) || (t > 0 && sinceProgress > 8000)) {
+      console.warn(
+        `[player] video stuck (t=${t}, sinceLoaded=${sinceLoaded}ms, sinceProgress=${sinceProgress}ms), auto-skipping`,
+      );
+      stuckRef.current.vid = null; // evitar doble skip
+      void setItemStatus(nowPlaying.id, 'skipped').then(() => {
+        loadedRef.current[activeSlot] = null;
+        preloadedNextRef.current = null;
+        void refresh();
+      });
+    }
+  }, [
+    active.state.currentTimeSec, active.state.isPlaying, nowPlaying, showOverlay,
+    activeSlot, refresh,
+  ]);
+
   // ─── Recibe comandos remotos del admin (cross-tab via Supabase Broadcast) ───
   useReceivePlayerCommand(venue.id, (cmd) => {
     if (showOverlay) return; // ignorar comandos antes de iniciar reproductor

@@ -52,20 +52,21 @@ export function useHouseFiller({
     // Cola vacía — esperar `silenceMs` antes de auto-fill
     if (timerRef.current) return; // ya hay timer programado
 
+    console.log('[house-filler] queue empty, will fill in', silenceMs, 'ms');
     timerRef.current = window.setTimeout(async () => {
       timerRef.current = null;
       if (fillingRef.current) return;
       fillingRef.current = true;
 
       try {
-        // Cuando llegamos acá, nowPlaying es null y queued es vacío (isEmpty).
-        // Solo excluimos blocked (no hay nada en la cola que excluir).
         const exclude = new Set<string>(queued.map((q) => q.track.providerId));
+        console.log('[house-filler] picking random track from house artists...');
         const track = await getRandomHouseTrack(exclude);
         if (!track) {
           console.warn('[house-filler] no track found for any artist');
           return;
         }
+        console.log('[house-filler] picked:', track.title, 'by', track.artists[0]);
 
         const resolved = await resolveOnYoutube(track);
         if (!resolved) {
@@ -79,7 +80,7 @@ export function useHouseFiller({
           requestedBy: 'house',
           requestedByName: 'La casa',
         });
-        console.log('[house-filler] added:', resolved.title, 'by', resolved.artists[0]);
+        console.log('[house-filler] ✓ added:', resolved.title);
       } catch (e) {
         console.error('[house-filler] error:', e);
       } finally {
