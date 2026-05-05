@@ -88,9 +88,10 @@ export const GENRE_LASTFM_TAGS: Record<Genre, string[]> = {
   cumbia: ['cumbia', 'cumbia colombiana', 'cumbia villera', 'cumbia sonidera'],
   // Música popular colombiana — Yeison Jimenez, Pipe Bueno, Jessi Uribe,
   // Jhonny Rivera, Arelys Henao. En Colombia "ranchera" se usa también
-  // para popular, así que aceptamos ambos tags.
+  // para popular. NO incluimos "popular" suelto porque Last.fm lo usa como
+  // tag genérico ("popular music") que matchea cualquier hit.
   popular: [
-    'popular', 'musica popular', 'música popular', 'popular colombiano',
+    'musica popular', 'música popular', 'popular colombiano',
     'despecho', 'ranchera colombiana', 'colombian popular',
     'ranchera', 'rancheras',
   ],

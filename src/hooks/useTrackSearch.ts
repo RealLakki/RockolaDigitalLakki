@@ -55,6 +55,7 @@ export function useTrackSearch(
           if (reqIdRef.current !== myId) return;
 
           const filtered: TrackSearchResult[] = [];
+          const acceptedDebug: Array<{ track: string; tags: string[]; itunes?: string; matched?: string; via: string }> = [];
           const rejected: Array<{ track: string; tags: string[]; itunes?: string }> = [];
 
           rawResults.forEach((r, i) => {
@@ -63,6 +64,13 @@ export function useTrackSearch(
             const result = genreMatchedFor(tags, itunesGenre, allowed);
             if (result.allowed) {
               filtered.push(r);
+              acceptedDebug.push({
+                track: `${r.artists[0]} - ${r.title}`,
+                tags,
+                itunes: itunesGenre,
+                matched: result.matchedGenre ?? '(via itunes fallback)',
+                via: result.matchedTag ? `tag:${result.matchedTag}` : 'itunes-genre',
+              });
             } else {
               rejected.push({
                 track: `${r.artists[0]} - ${r.title}`,
@@ -75,6 +83,9 @@ export function useTrackSearch(
           console.log(
             `[genre-filter] "${q}" allowed=[${allowed.join(',')}]: ${filtered.length} pass, ${rejected.length} rejected`,
           );
+          if (acceptedDebug.length > 0) {
+            console.log('[genre-filter] accepted:', acceptedDebug);
+          }
           if (rejected.length > 0) {
             console.log('[genre-filter] rejected:', rejected);
           }
