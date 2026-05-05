@@ -273,7 +273,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     queued,
     nowPlaying,
     enabled: !showOverlay,
-    silenceMs: 4000,
+    silenceMs: 1500,
   });
 
   // ─── Auto-skip cuando YouTube bloquea el video ───
