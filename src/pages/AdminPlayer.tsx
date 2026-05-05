@@ -4,6 +4,7 @@ import { useVenue } from '../hooks/useVenue';
 import { useQueue } from '../hooks/useQueue';
 import { useYoutubePlayer } from '../hooks/useYoutubePlayer';
 import { useFullscreen } from '../hooks/useFullscreen';
+import { useReceivePlayerCommand } from '../hooks/usePlayerControl';
 import { setItemStatus } from '../lib/supabase';
 import { Visualizer } from '../components/player/Visualizer';
 import { NextUpStrip } from '../components/player/NextUpStrip';
@@ -256,10 +257,66 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     });
   }, [active]);
 
+  // ─── Recibe comandos remotos del admin (cross-tab via Supabase Broadcast) ───
+  useReceivePlayerCommand(venue.id, (cmd) => {
+    if (showOverlay) return; // ignorar comandos antes de iniciar reproductor
+    switch (cmd) {
+      case 'play': active.controls.play(); break;
+      case 'pause': active.controls.pause(); break;
+      case 'skip': handleSkipTrack(); break;
+      case 'mute':
+        setMuted(true);
+        active.controls.setVolume(0);
+        break;
+      case 'unmute':
+        setMuted(false);
+        active.controls.setVolume(TARGET_VOLUME);
+        break;
+      case 'volume-up':
+        active.controls.setVolume(Math.min(100, TARGET_VOLUME + 10));
+        break;
+      case 'volume-down':
+        active.controls.setVolume(Math.max(0, TARGET_VOLUME - 10));
+        break;
+    }
+  });
+
+  // ─── Auto-hide del HUD por inactividad (estilo YouTube/Netflix) ───
+  const [hudVisible, setHudVisible] = useState(true);
+  const idleTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (showOverlay) {
+      setHudVisible(true);
+      return;
+    }
+    const reset = () => {
+      setHudVisible(true);
+      if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = window.setTimeout(() => setHudVisible(false), 3500);
+    };
+    reset();
+    window.addEventListener('mousemove', reset);
+    window.addEventListener('mousedown', reset);
+    window.addEventListener('touchstart', reset);
+    window.addEventListener('keydown', reset);
+    return () => {
+      window.removeEventListener('mousemove', reset);
+      window.removeEventListener('mousedown', reset);
+      window.removeEventListener('touchstart', reset);
+      window.removeEventListener('keydown', reset);
+      if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    };
+  }, [showOverlay]);
+
   const showVisualizer = !nowPlaying || !nowPlaying.track.hasVideo;
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-base relative">
+    <div
+      className={[
+        'h-screen w-screen overflow-hidden bg-base relative',
+        hudVisible || showOverlay ? '' : 'cursor-none',
+      ].join(' ')}
+    >
       {/* Slot A */}
       <div
         ref={playerA.containerRef}
@@ -283,9 +340,17 @@ function PlayerSurface({ venue }: { venue: Venue }) {
         </div>
       )}
 
-      {/* QR panel: solo visible cuando ya arrancó el reproductor.
-          Es lo que ven los clientes desde sus mesas para escanear. */}
-      {!showOverlay && <PlayerQrPanel slug={venue.slug} size={180} />}
+      {/* QR panel: se oculta junto con el HUD por inactividad. */}
+      {!showOverlay && (
+        <div
+          className={[
+            'transition-opacity duration-500',
+            hudVisible ? 'opacity-100' : 'opacity-0 pointer-events-none',
+          ].join(' ')}
+        >
+          <PlayerQrPanel slug={venue.slug} size={180} />
+        </div>
+      )}
 
       {showOverlay && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-base/95 backdrop-blur-xl">
@@ -327,7 +392,12 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       )}
 
       {!showOverlay && (
-        <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-base via-base/85 to-transparent p-4">
+        <div
+          className={[
+            'absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-base via-base/85 to-transparent p-4 transition-opacity duration-500',
+            hudVisible ? 'opacity-100' : 'opacity-0 pointer-events-none',
+          ].join(' ')}
+        >
           <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 items-end">
             <div className="col-span-7">
               {nowPlaying ? (

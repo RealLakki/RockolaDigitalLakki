@@ -1,4 +1,5 @@
 import { boostItem, removeQueueItem, setItemStatus, unboostItem, updateVenue } from '../../lib/supabase';
+import { useSendPlayerCommand } from '../../hooks/usePlayerControl';
 import { joinArtists } from '../../utils/formatters';
 import type { QueueItem, Venue } from '../../lib/types';
 import { NeonButton } from '../common/NeonButton';
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefresh }: Props) {
+  const sendCommand = useSendPlayerCommand(venue.id);
+
   const after = (p: Promise<unknown>) =>
     p.then(() => onRefresh()).catch((e) => console.error('[admin] action failed:', e));
 
@@ -26,7 +29,7 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefre
   return (
     <div className="space-y-2">
       {nowPlaying && (
-        <div className="glass-elevated rounded-xl p-3 flex items-center gap-3 gold-border">
+        <div className="glass-elevated rounded-xl p-3 flex flex-wrap items-center gap-3 gold-border">
           <span className="text-[10px] uppercase tracking-widest text-gold font-heading">
             Sonando
           </span>
@@ -37,13 +40,52 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefre
             <p className="text-ink text-sm font-medium truncate">{nowPlaying.track.title}</p>
             <p className="text-ink-mute text-xs truncate">{joinArtists(nowPlaying.track.artists)}</p>
           </div>
-          <NeonButton
-            size="sm"
-            variant="danger"
-            onClick={() => after(setItemStatus(nowPlaying.id, 'skipped'))}
-          >
-            Saltar
-          </NeonButton>
+          {/* Control remoto del reproductor (cross-tab via Supabase broadcast) */}
+          <div className="flex gap-1 shrink-0">
+            <NeonButton
+              size="sm"
+              variant="ghost"
+              onClick={() => sendCommand('play')}
+              title="Play (envía al reproductor)"
+            >
+              ▶
+            </NeonButton>
+            <NeonButton
+              size="sm"
+              variant="ghost"
+              onClick={() => sendCommand('pause')}
+              title="Pausar"
+            >
+              ❚❚
+            </NeonButton>
+            <NeonButton
+              size="sm"
+              variant="ghost"
+              onClick={() => sendCommand('volume-down')}
+              title="Bajar volumen"
+            >
+              −
+            </NeonButton>
+            <NeonButton
+              size="sm"
+              variant="ghost"
+              onClick={() => sendCommand('volume-up')}
+              title="Subir volumen"
+            >
+              +
+            </NeonButton>
+            <NeonButton
+              size="sm"
+              variant="danger"
+              onClick={() => {
+                sendCommand('skip');
+                void after(setItemStatus(nowPlaying.id, 'skipped'));
+              }}
+              title="Saltar canción"
+            >
+              ⏭
+            </NeonButton>
+          </div>
         </div>
       )}
 
