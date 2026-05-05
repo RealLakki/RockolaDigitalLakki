@@ -11,6 +11,7 @@ import { NowPlayingMini } from '../components/customer/NowPlayingMini';
 import { ArtistCard } from '../components/customer/ArtistCard';
 import { AlbumCard } from '../components/customer/AlbumCard';
 import { Tabs } from '../components/customer/Tabs';
+import { HouseArtistsCard } from '../components/customer/HouseArtistsCard';
 import { TopTracksCard } from '../components/admin/TopTracksCard';
 import { GlowCard } from '../components/common/GlowCard';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
@@ -348,6 +349,8 @@ function HomeView({
             </h2>
             <QueueList items={queued} highlightClientId={clientId} />
           </GlowCard>
+
+          <HouseArtistsCard onSelectArtist={onSelectArtist} />
 
           <TopTracksCard
             venueId={venue.id}

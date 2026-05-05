@@ -48,9 +48,13 @@ export function QueueList({ items, highlightClientId }: Props) {
 
   if (items.length === 0) {
     return (
-      <p className="text-ink-dim text-center py-6 text-sm">
-        Aún nadie ha pedido nada. Sé el primero ✨
-      </p>
+      <div className="text-center py-6 px-4">
+        <p className="text-2xl mb-2">🎙️</p>
+        <p className="text-ink font-medium text-sm mb-1">La cantina te escucha</p>
+        <p className="text-ink-dim text-xs leading-relaxed">
+          Nadie ha pedido música todavía. Busca tu canción arriba y sé tú el que rompa el silencio.
+        </p>
+      </div>
     );
   }
 

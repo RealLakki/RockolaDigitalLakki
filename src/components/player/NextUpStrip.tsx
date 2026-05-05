@@ -25,18 +25,27 @@ export function NextUpStrip({ items }: Props) {
 
   if (items.length === 0) {
     return (
-      <div className="text-center text-ink-dim text-sm py-8">
-        Cola vacía — pídele al cliente que escanee el QR
+      <div className="text-center py-6">
+        <p className="text-3xl mb-2">📲</p>
+        <p className="text-gold font-heading uppercase tracking-widest text-[11px]">
+          Escanea el QR
+        </p>
+        <p className="text-ink-mute text-xs mt-1">
+          Pide la primera del lote
+        </p>
       </div>
     );
   }
 
+  const visible = items.slice(0, 3);
+  const hidden = Math.max(0, items.length - visible.length);
+
   return (
     <div ref={ref} className="flex flex-col gap-2">
       <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-1">
-        En cola
+        En cola · {items.length}
       </p>
-      {items.slice(0, 6).map((item, i) => (
+      {visible.map((item, i) => (
         <div key={item.id} className="next-row flex items-center gap-3 glass rounded-xl px-3 py-2">
           <div
             className={[
@@ -60,6 +69,11 @@ export function NextUpStrip({ items }: Props) {
           </div>
         </div>
       ))}
+      {hidden > 0 && (
+        <p className="text-ink-dim text-xs text-center font-heading uppercase tracking-wider pt-1">
+          + {hidden} {hidden === 1 ? 'canción' : 'canciones'} más
+        </p>
+      )}
     </div>
   );
 }

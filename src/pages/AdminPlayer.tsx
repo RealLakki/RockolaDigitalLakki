@@ -327,21 +327,21 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       )}
 
       {!showOverlay && (
-        <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-base via-base/85 to-transparent p-6">
-          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6 items-end">
+        <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-base via-base/85 to-transparent p-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 items-end">
             <div className="col-span-7">
               {nowPlaying ? (
                 <>
-                  <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-1">
+                  <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-0.5">
                     Sonando · slot {activeSlot.toUpperCase()}
                   </p>
-                  <h2 className="text-4xl font-display text-ink mb-1 truncate">
+                  <h2 className="text-2xl font-display italic text-ink leading-tight truncate">
                     {nowPlaying.track.title}
                   </h2>
-                  <p className="text-ink-mute text-lg truncate">
+                  <p className="text-ink-mute text-sm truncate">
                     {joinArtists(nowPlaying.track.artists)}
                     {nowPlaying.requestedByName && (
-                      <span className="text-gold ml-2">· pedida por {nowPlaying.requestedByName}</span>
+                      <span className="text-gold ml-2">· {nowPlaying.requestedByName}</span>
                     )}
                   </p>
                   <SeekBar
@@ -351,32 +351,32 @@ function PlayerSurface({ venue }: { venue: Venue }) {
                   />
                 </>
               ) : (
-                <p className="text-2xl text-ink-mute">Esperando que alguien pida música...</p>
+                <p className="text-base text-ink-mute">Esperando que alguien pida música...</p>
               )}
 
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="flex flex-wrap gap-1.5 mt-3">
                 <NeonButton
-                  size="md"
+                  size="sm"
                   variant="ghost"
                   onClick={() => active.state.isPlaying ? active.controls.pause() : active.controls.play()}
                   disabled={!nowPlaying}
                 >
                   {active.state.isPlaying ? 'Pausar' : 'Play'}
                 </NeonButton>
-                <NeonButton size="md" variant="ghost" onClick={() => handleSkipForward(30)} disabled={!nowPlaying}>
+                <NeonButton size="sm" variant="ghost" onClick={() => handleSkipForward(30)} disabled={!nowPlaying}>
                   +30s
                 </NeonButton>
-                <NeonButton size="md" variant="ghost" onClick={() => handleSkipForward(-10)} disabled={!nowPlaying}>
+                <NeonButton size="sm" variant="ghost" onClick={() => handleSkipForward(-10)} disabled={!nowPlaying}>
                   −10s
                 </NeonButton>
-                <NeonButton size="md" variant="danger" onClick={handleSkipTrack} disabled={!nowPlaying}>
-                  Saltar canción
+                <NeonButton size="sm" variant="danger" onClick={handleSkipTrack} disabled={!nowPlaying}>
+                  Saltar
                 </NeonButton>
-                <NeonButton size="md" variant="ghost" onClick={handleToggleMute}>
-                  {muted ? 'Activar audio' : 'Silenciar'}
+                <NeonButton size="sm" variant="ghost" onClick={handleToggleMute}>
+                  {muted ? 'Audio' : 'Silenciar'}
                 </NeonButton>
-                <NeonButton size="md" variant="ghost" onClick={fullscreen.toggle}>
-                  {fullscreen.isFullscreen ? 'Salir pantalla completa' : 'Pantalla completa'}
+                <NeonButton size="sm" variant="ghost" onClick={fullscreen.toggle}>
+                  {fullscreen.isFullscreen ? 'Salir FS' : 'Pantalla completa'}
                 </NeonButton>
               </div>
             </div>
