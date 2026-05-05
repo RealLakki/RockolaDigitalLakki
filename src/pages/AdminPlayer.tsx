@@ -321,9 +321,9 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     const sinceLoaded = now - stuckRef.current.loadedAt;
     const sinceProgress = now - stuckRef.current.lastUpdate;
 
-    // Caso 1: nunca arrancó (currentTime sigue en 0 después de 8s)
-    // Caso 2: estaba reproduciendo y se atascó por 8s sin avanzar
-    if ((t === 0 && sinceLoaded > 8000) || (t > 0 && sinceProgress > 8000)) {
+    // Caso 1: nunca arrancó (currentTime sigue en 0 después de 3s)
+    // Caso 2: estaba reproduciendo y se atascó por 3s sin avanzar
+    if ((t === 0 && sinceLoaded > 3000) || (t > 0 && sinceProgress > 3000)) {
       console.warn(
         `[player] video stuck (t=${t}, sinceLoaded=${sinceLoaded}ms, sinceProgress=${sinceProgress}ms), auto-skipping`,
       );
