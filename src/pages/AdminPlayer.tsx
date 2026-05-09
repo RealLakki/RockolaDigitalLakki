@@ -298,15 +298,24 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   // Detecta el videoId que ESTÁ realmente cargado en el slot active (puede no
   // coincidir con nowPlaying durante el window de switch tras un crossfade).
   // Para skipear, busca el item correcto entre nowPlaying/queued con ese videoId.
+  const STUCK_TIMEOUT_MS = 5000;
+  const STUCK_PLAYBACK_OK_THRESHOLD_SEC = 5;
+  const STUCK_MAX_CASCADE = 3;
   const stuckRef = useRef<{ vid: string | null; lastTime: number; lastUpdate: number; loadedAt: number }>({
     vid: null,
     lastTime: 0,
     lastUpdate: Date.now(),
     loadedAt: Date.now(),
   });
+  // Contador de auto-skips consecutivos sin reproducción exitosa (t > 5s).
+  // Si pasa de STUCK_MAX_CASCADE, dejamos de auto-skipear: probablemente
+  // hay un problema sistémico (ad-blocker, red, browser policy) y vaciar
+  // toda la cola no ayuda — el usuario debe intervenir.
+  const cascadeRef = useRef(0);
   useEffect(() => {
     if (showOverlay) {
       stuckRef.current.vid = null;
+      cascadeRef.current = 0;
       return;
     }
     const slotVid = loadedRef.current[activeSlot];
@@ -323,10 +332,14 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       return;
     }
 
-    // Si avanzó el tiempo, todo bien
-    if (t > stuckRef.current.lastTime + 0.3) {
+    // Si t cambió (avanzó, retrocedió por seek, o jitter): hay vida en el iframe.
+    // Antes usábamos `t > lastTime + 0.3` pero el threshold causaba falsos
+    // positivos cuando el tick caía justo abajo de 0.3s; cualquier cambio basta.
+    if (t !== stuckRef.current.lastTime) {
       stuckRef.current.lastTime = t;
       stuckRef.current.lastUpdate = now;
+      // Reproducción exitosa: reseteamos el contador de cascada.
+      if (t > STUCK_PLAYBACK_OK_THRESHOLD_SEC) cascadeRef.current = 0;
       return;
     }
 
@@ -335,7 +348,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     // sinceProgress y al reanudar dispara un skip inmediato (porque t no
     // alcanzó a avanzar en el primer tick post-resume). Mismo motivo para
     // loadedAt: si el user pausa antes de que arranque, no queremos que
-    // se gatille la rama `t === 0 && sinceLoaded > 3000`.
+    // se gatille la rama `t === 0 && sinceLoaded > timeout`.
     if (!active.state.isPlaying) {
       stuckRef.current.lastUpdate = now;
       stuckRef.current.loadedAt = now;
@@ -345,7 +358,20 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     const sinceLoaded = now - stuckRef.current.loadedAt;
     const sinceProgress = now - stuckRef.current.lastUpdate;
 
-    if ((t === 0 && sinceLoaded > 3000) || (t > 0 && sinceProgress > 3000)) {
+    if ((t === 0 && sinceLoaded > STUCK_TIMEOUT_MS) || (t > 0 && sinceProgress > STUCK_TIMEOUT_MS)) {
+      // Circuit breaker: si ya fueron N auto-skips seguidos sin que ninguna
+      // canción llegue a reproducirse >5s, bailamos. Vaciar toda la cola
+      // automáticamente solo agrava un problema sistémico (CORS de ads,
+      // ad-blocker bloqueando iframe, browser que freezó el tab, etc.).
+      if (cascadeRef.current >= STUCK_MAX_CASCADE) {
+        console.error(
+          `[player] cascada de stuck (${cascadeRef.current} skips seguidos). ` +
+          `Auto-skip desactivado hasta el próximo cambio. Pulsa Play manualmente.`,
+        );
+        stuckRef.current.vid = null; // dejar de chequear hasta el próximo load
+        return;
+      }
+
       // Buscar el item correspondiente al videoId cargado
       const stuckItem =
         nowPlaying?.track.youtubeVideoId === slotVid
@@ -357,8 +383,10 @@ function PlayerSurface({ venue }: { venue: Venue }) {
         return;
       }
 
+      cascadeRef.current++;
       console.warn(
-        `[player] stuck "${stuckItem.track.title}" (t=${t}, sinceLoaded=${sinceLoaded}ms), auto-skipping`,
+        `[player] stuck "${stuckItem.track.title}" ` +
+        `(t=${t.toFixed(2)}, sinceLoaded=${sinceLoaded}ms, cascade=${cascadeRef.current}/${STUCK_MAX_CASCADE}), auto-skipping`,
       );
       stuckRef.current.vid = null; // evitar doble skip
       void setItemStatus(stuckItem.id, 'skipped').then(() => {
