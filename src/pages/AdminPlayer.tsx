@@ -498,6 +498,16 @@ function PlayerSurface({ venue }: { venue: Venue }) {
         </div>
       )}
 
+      {/* Cola persistente — NO se oculta con el HUD por inactividad.
+          Va arriba a la derecha para no chocar con el QR (abajo-derecha).
+          Solo se renderiza si hay items: si la cola está vacía el QR ya
+          invita a pedir, no hace falta duplicar el mensaje. */}
+      {!showOverlay && queued.length > 0 && (
+        <div className="absolute top-4 right-4 z-30 w-80 max-w-[35vw]">
+          <NextUpStrip items={queued} />
+        </div>
+      )}
+
       {!showOverlay && (
         <div
           className={[
@@ -505,61 +515,55 @@ function PlayerSurface({ venue }: { venue: Venue }) {
             hudVisible ? 'opacity-100' : 'opacity-0 pointer-events-none',
           ].join(' ')}
         >
-          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 items-end">
-            <div className="col-span-7">
-              {nowPlaying ? (
-                <>
-                  <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-0.5">
-                    Sonando · slot {activeSlot.toUpperCase()}
-                  </p>
-                  <h2 className="text-2xl font-display italic text-ink leading-tight truncate">
-                    {nowPlaying.track.title}
-                  </h2>
-                  <p className="text-ink-mute text-sm truncate">
-                    {joinArtists(nowPlaying.track.artists)}
-                    {nowPlaying.requestedByName && (
-                      <span className="text-gold ml-2">· {nowPlaying.requestedByName}</span>
-                    )}
-                  </p>
-                  <SeekBar
-                    current={active.state.currentTimeSec}
-                    total={active.state.durationSec}
-                    onSeek={handleSeek}
-                  />
-                </>
-              ) : (
-                <p className="text-base text-ink-mute">Esperando que alguien pida música...</p>
-              )}
+          <div className="max-w-7xl mx-auto">
+            {nowPlaying ? (
+              <>
+                <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-0.5">
+                  Sonando · slot {activeSlot.toUpperCase()}
+                </p>
+                <h2 className="text-2xl font-display italic text-ink leading-tight truncate">
+                  {nowPlaying.track.title}
+                </h2>
+                <p className="text-ink-mute text-sm truncate">
+                  {joinArtists(nowPlaying.track.artists)}
+                  {nowPlaying.requestedByName && (
+                    <span className="text-gold ml-2">· {nowPlaying.requestedByName}</span>
+                  )}
+                </p>
+                <SeekBar
+                  current={active.state.currentTimeSec}
+                  total={active.state.durationSec}
+                  onSeek={handleSeek}
+                />
+              </>
+            ) : (
+              <p className="text-base text-ink-mute">Esperando que alguien pida música...</p>
+            )}
 
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                <NeonButton
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => active.state.isPlaying ? active.controls.pause() : active.controls.play()}
-                  disabled={!nowPlaying}
-                >
-                  {active.state.isPlaying ? 'Pausar' : 'Play'}
-                </NeonButton>
-                <NeonButton size="sm" variant="ghost" onClick={() => handleSkipForward(30)} disabled={!nowPlaying}>
-                  +30s
-                </NeonButton>
-                <NeonButton size="sm" variant="ghost" onClick={() => handleSkipForward(-10)} disabled={!nowPlaying}>
-                  −10s
-                </NeonButton>
-                <NeonButton size="sm" variant="danger" onClick={handleSkipTrack} disabled={!nowPlaying}>
-                  Saltar
-                </NeonButton>
-                <NeonButton size="sm" variant="ghost" onClick={handleToggleMute}>
-                  {muted ? 'Audio' : 'Silenciar'}
-                </NeonButton>
-                <NeonButton size="sm" variant="ghost" onClick={fullscreen.toggle}>
-                  {fullscreen.isFullscreen ? 'Salir FS' : 'Pantalla completa'}
-                </NeonButton>
-              </div>
-            </div>
-
-            <div className="col-span-5">
-              <NextUpStrip items={queued} />
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              <NeonButton
+                size="sm"
+                variant="ghost"
+                onClick={() => active.state.isPlaying ? active.controls.pause() : active.controls.play()}
+                disabled={!nowPlaying}
+              >
+                {active.state.isPlaying ? 'Pausar' : 'Play'}
+              </NeonButton>
+              <NeonButton size="sm" variant="ghost" onClick={() => handleSkipForward(30)} disabled={!nowPlaying}>
+                +30s
+              </NeonButton>
+              <NeonButton size="sm" variant="ghost" onClick={() => handleSkipForward(-10)} disabled={!nowPlaying}>
+                −10s
+              </NeonButton>
+              <NeonButton size="sm" variant="danger" onClick={handleSkipTrack} disabled={!nowPlaying}>
+                Saltar
+              </NeonButton>
+              <NeonButton size="sm" variant="ghost" onClick={handleToggleMute}>
+                {muted ? 'Audio' : 'Silenciar'}
+              </NeonButton>
+              <NeonButton size="sm" variant="ghost" onClick={fullscreen.toggle}>
+                {fullscreen.isFullscreen ? 'Salir FS' : 'Pantalla completa'}
+              </NeonButton>
             </div>
           </div>
         </div>
