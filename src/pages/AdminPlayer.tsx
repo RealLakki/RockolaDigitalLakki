@@ -330,8 +330,17 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       return;
     }
 
-    // Pausa intencional (ya arrancó y user pausó)
-    if (!active.state.isPlaying && t > 0) return;
+    // Si el player NO está reproduciendo (pausa manual, buffering, cued),
+    // congelamos el reloj de stuck. Sin esto, una pausa larga acumula
+    // sinceProgress y al reanudar dispara un skip inmediato (porque t no
+    // alcanzó a avanzar en el primer tick post-resume). Mismo motivo para
+    // loadedAt: si el user pausa antes de que arranque, no queremos que
+    // se gatille la rama `t === 0 && sinceLoaded > 3000`.
+    if (!active.state.isPlaying) {
+      stuckRef.current.lastUpdate = now;
+      stuckRef.current.loadedAt = now;
+      return;
+    }
 
     const sinceLoaded = now - stuckRef.current.loadedAt;
     const sinceProgress = now - stuckRef.current.lastUpdate;
