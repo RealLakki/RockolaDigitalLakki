@@ -4,12 +4,11 @@
  * Last.fm tiene tags por canción/artista mucho más granulares: "reggaeton",
  * "vallenato", "perreo", "corridos tumbados", etc.
  *
- * Doc: https://www.last.fm/api/show/track.getInfo
- *
- * Sin auth, free, hasta ~5 req/sec. Cacheamos en memoria para no spammear.
+ * Las llamadas ahora pasan por el backend proxy para evitar problemas CORS
+ * en iOS Safari y ocultar la API key.
  */
 
-const API_BASE = 'https://ws.audioscrobbler.com/2.0/';
+const API_BASE = '/api'; // proxy local
 
 interface LastfmTag {
   name: string;
@@ -39,31 +38,26 @@ const artistCache = new Map<string, string[]>();
 const cacheKey = (artist: string, title: string) =>
   `${artist.toLowerCase().trim()}::${title.toLowerCase().trim()}`;
 
-const apiKey = () => import.meta.env.VITE_LASTFM_API_KEY ?? '';
-
 /**
  * Devuelve los tags más populares de un track. Si Last.fm no encuentra el
  * track exacto (común para releases nuevos o muy nicho), hace fallback a los
  * tags del artista.
  */
 export async function getTrackTags(artist: string, title: string): Promise<string[]> {
-  const key = apiKey();
-  if (!key) return [];
-
   const ck = cacheKey(artist, title);
   const cached = trackCache.get(ck);
   if (cached) return cached;
 
   try {
     // Intento 1: track exacto
-    const trackTags = await fetchTrackTags(artist, title, key);
+    const trackTags = await fetchTrackTags(artist, title);
     if (trackTags.length > 0) {
       trackCache.set(ck, trackTags);
       return trackTags;
     }
 
     // Intento 2: tags del artista (fallback)
-    const artistTags = await fetchArtistTags(artist, key);
+    const artistTags = await fetchArtistTags(artist);
     trackCache.set(ck, artistTags);
     return artistTags;
   } catch (e) {
@@ -73,35 +67,33 @@ export async function getTrackTags(artist: string, title: string): Promise<strin
   }
 }
 
-async function fetchTrackTags(artist: string, title: string, key: string): Promise<string[]> {
+async function fetchTrackTags(artist: string, title: string): Promise<string[]> {
   const params = new URLSearchParams({
     method: 'track.getInfo',
-    api_key: key,
     artist,
     track: title,
     format: 'json',
     autocorrect: '1',
   });
-  const res = await fetch(`${API_BASE}?${params}`);
+  const res = await fetch(`/api/lastfm-track?${params}`);
   if (!res.ok) return [];
   const data = (await res.json()) as LastfmTrackInfo;
   const tags = data.track?.toptags?.tag ?? [];
   return tags.map((t) => t.name.toLowerCase()).filter((t) => t && t.length > 1);
 }
 
-async function fetchArtistTags(artist: string, key: string): Promise<string[]> {
+async function fetchArtistTags(artist: string): Promise<string[]> {
   const ak = artist.toLowerCase().trim();
   const cached = artistCache.get(ak);
   if (cached) return cached;
 
   const params = new URLSearchParams({
     method: 'artist.getInfo',
-    api_key: key,
     artist,
     format: 'json',
     autocorrect: '1',
   });
-  const res = await fetch(`${API_BASE}?${params}`);
+  const res = await fetch(`/api/lastfm-artist?${params}`);
   if (!res.ok) {
     artistCache.set(ak, []);
     return [];
@@ -136,7 +128,7 @@ export async function getTrackTagsBulk(
   return results;
 }
 
-/** Si la integración está disponible. Útil para condicionar UI. */
+/** Si la integración está disponible. Siempre true ya que el proxy maneja la key. */
 export function isLastfmEnabled(): boolean {
-  return !!apiKey();
+  return true;
 }

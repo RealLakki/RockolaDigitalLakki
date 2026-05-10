@@ -48,14 +48,15 @@ export async function itunesSearch(
     media: 'music',
     entity: 'song',
     country: opts.market ?? 'US',
-    // iTunes max es 200. Pedimos más cuando hay género filter para no quedar
-    // cortos después de filtrar.
     limit: String(Math.min((opts.limit ?? 20) * (allowedGenres.length > 0 ? 5 : 2), 100)),
     explicit: opts.allowExplicit === false ? 'No' : 'Yes',
   });
 
-  const res = await fetch(`https://itunes.apple.com/search?${params}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`iTunes search failed: ${res.status}`);
+  const res = await fetch(`/api/itunes-search?${params}`);
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(`iTunes search failed: ${res.status} ${errData.error || ''}`);
+  }
   const data: ITunesResponse = await res.json();
 
   const tracks = data.results
@@ -139,8 +140,11 @@ export async function itunesSearchArtists(
     country: opts.market ?? 'US',
     limit: String(Math.min(opts.limit ?? 8, 25)),
   });
-  const res = await fetch(`https://itunes.apple.com/search?${params}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`iTunes artist search failed: ${res.status}`);
+  const res = await fetch(`/api/itunes-search?${params}`);
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(`iTunes artist search failed: ${res.status} ${errData.error || ''}`);
+  }
   const data = (await res.json()) as { results: ITunesArtist[] };
   return data.results
     .filter((a) => a.wrapperType === 'artist')
@@ -162,8 +166,11 @@ export async function itunesGetArtistAlbums(
     country: opts.market ?? 'US',
     limit: String(Math.min(opts.limit ?? 25, 100)),
   });
-  const res = await fetch(`https://itunes.apple.com/lookup?${params}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`iTunes albums lookup failed: ${res.status}`);
+  const res = await fetch(`/api/itunes-search?${params}`);
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(`iTunes albums lookup failed: ${res.status} ${errData.error || ''}`);
+  }
   const data = (await res.json()) as { results: Array<ITunesAlbum | ITunesArtist> };
   return data.results
     .filter((r): r is ITunesAlbum => r.wrapperType === 'collection')
@@ -190,8 +197,11 @@ export async function itunesGetAlbumTracks(
     country: opts.market ?? 'US',
     limit: '60',
   });
-  const res = await fetch(`https://itunes.apple.com/lookup?${params}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`iTunes album tracks lookup failed: ${res.status}`);
+  const res = await fetch(`/api/itunes-search?${params}`);
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(`iTunes album tracks lookup failed: ${res.status} ${errData.error || ''}`);
+  }
   const data = (await res.json()) as { results: Array<ITunesTrack & { wrapperType?: string }> };
   return data.results
     .filter((r) => r.wrapperType === 'track' || r.kind === 'song')
