@@ -8,8 +8,6 @@
  * en iOS Safari y ocultar la API key.
  */
 
-const API_BASE = '/api'; // proxy local
-
 interface LastfmTag {
   name: string;
   count?: number;
