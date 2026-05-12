@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import anime from 'animejs';
-import { CantinaLogo } from '../common/CantinaLogo';
+import { AppLogo } from '../common/AppLogo';
 import { NeonButton } from '../common/NeonButton';
 
 const ADMIN_PASSWORD = '3123';
@@ -75,25 +75,25 @@ export function AdminGate({ children }: Props) {
       {/* Glow ornamentales */}
       <div
         className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(200,155,60,0.15) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(255,218,193,0.55) 0%, transparent 70%)' }}
       />
       <div
         className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(185,28,28,0.10) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(94,195,194,0.30) 0%, transparent 70%)' }}
       />
 
       <div
         ref={cardRef}
         className="relative w-full max-w-sm rounded-2xl p-8 text-center"
         style={{
-          background: 'rgba(28, 23, 18, 0.85)',
-          border: '1px solid rgba(200, 155, 60, 0.3)',
-          boxShadow: '0 0 30px rgba(200, 155, 60, 0.15), 0 20px 60px rgba(0,0,0,0.5)',
+          background: 'rgba(255, 255, 255, 0.85)',
+          border: '1px solid rgba(255, 106, 170, 0.30)',
+          boxShadow: '0 0 30px rgba(255, 106, 170, 0.15), 0 20px 60px rgba(15, 42, 51, 0.10)',
           backdropFilter: 'blur(20px)',
         }}
       >
         <div className="flex justify-center mb-5">
-          <CantinaLogo size={96} glow />
+          <AppLogo size={96} glow />
         </div>
 
         <p className="text-gold font-heading uppercase tracking-[0.22em] text-[11px] mb-2">
@@ -117,14 +117,14 @@ export function AdminGate({ children }: Props) {
             placeholder="Clave"
             className="w-full text-center text-2xl tracking-[0.5em] font-heading rounded-xl px-4 py-3 outline-none transition-all"
             style={{
-              background: 'rgba(15, 13, 10, 0.7)',
+              background: 'rgba(255, 250, 220, 0.85)',
               border: error
-                ? '1px solid rgba(185, 28, 28, 0.6)'
-                : '1px solid rgba(200, 155, 60, 0.25)',
-              color: '#F5F0E8',
+                ? '1px solid rgba(230, 58, 106, 0.60)'
+                : '1px solid rgba(94, 195, 194, 0.35)',
+              color: '#0F2A33',
               boxShadow: error
-                ? '0 0 14px rgba(185, 28, 28, 0.35)'
-                : 'inset 0 0 8px rgba(200, 155, 60, 0.05)',
+                ? '0 0 14px rgba(230, 58, 106, 0.30)'
+                : 'inset 0 0 8px rgba(255, 106, 170, 0.08)',
             }}
           />
 

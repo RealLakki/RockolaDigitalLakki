@@ -15,7 +15,7 @@ import { HouseArtistsCard } from '../components/customer/HouseArtistsCard';
 import { TopTracksCard } from '../components/admin/TopTracksCard';
 import { GlowCard } from '../components/common/GlowCard';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
-import { CantinaLogo } from '../components/common/CantinaLogo';
+import { AppLogo } from '../components/common/AppLogo';
 import { EmptyState } from '../components/common/EmptyState';
 import { NeonButton } from '../components/common/NeonButton';
 import { enqueueTrack } from '../lib/supabase';
@@ -110,7 +110,7 @@ function CustomerInner({ venue }: { venue: Venue }) {
       <header className="sticky top-0 z-30 bg-base/80 backdrop-blur-xl border-b border-base-border">
         <div className="max-w-xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link to="/" className="shrink-0" title="Inicio">
-            <CantinaLogo size={42} />
+            <AppLogo size={42} />
           </Link>
           <Link to="/" className="flex-1 min-w-0 group">
             <p className="font-display italic text-ink text-lg leading-tight truncate group-hover:text-gold transition">
@@ -166,9 +166,9 @@ function CustomerInner({ venue }: { venue: Venue }) {
         )}
 
         <footer className="pt-10 pb-4 flex flex-col items-center gap-2">
-          <CantinaLogo size={36} />
+          <AppLogo size={36} />
           <p className="text-ink-dim text-[10px] uppercase tracking-[0.22em] font-heading text-center">
-            Sonando en La Cantina Plus · Cartagena
+            Sonando en {venue.name}
           </p>
           <div className="flex gap-3 text-[10px] uppercase tracking-widest font-heading text-ink-dim mt-2">
             <Link to="/" className="hover:text-gold transition">← Inicio</Link>
@@ -473,8 +473,8 @@ function YoutubeUrlInput({
     <div
       className="rounded-xl p-3"
       style={{
-        background: 'rgba(15,13,10,0.5)',
-        border: '1px solid rgba(200,155,60,0.18)',
+        background: 'rgba(255,255,255,0.65)',
+        border: '1px solid rgba(94,195,194,0.30)',
       }}
     >
       <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-2">
@@ -514,8 +514,8 @@ function TipHint() {
     <div
       className="rounded-xl px-4 py-3 flex items-center gap-3"
       style={{
-        background: 'linear-gradient(135deg, rgba(240,192,96,0.10) 0%, rgba(200,155,60,0.04) 100%)',
-        border: '1px solid rgba(200,155,60,0.22)',
+        background: 'linear-gradient(135deg, rgba(255,218,193,0.30) 0%, rgba(255,250,220,0.50) 100%)',
+        border: '1px solid rgba(255,106,170,0.28)',
       }}
     >
       <span className="text-xl shrink-0">⚡</span>

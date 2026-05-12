@@ -18,7 +18,7 @@ export function QrCodeCard({ slug }: Props) {
       QRCode.toCanvas(canvasRef.current, u, {
         width: 220,
         margin: 1,
-        color: { dark: '#C89B3C', light: '#00000000' },
+        color: { dark: '#FF6AAA', light: '#00000000' },
       });
     }
   }, [slug]);

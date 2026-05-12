@@ -12,7 +12,7 @@ import { BlockedSongs } from '../components/admin/BlockedSongs';
 import { QrCodeCard } from '../components/admin/QrCodeCard';
 import { TopTracksCard } from '../components/admin/TopTracksCard';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
-import { CantinaLogo } from '../components/common/CantinaLogo';
+import { AppLogo } from '../components/common/AppLogo';
 import { NeonButton } from '../components/common/NeonButton';
 import { GlowCard } from '../components/common/GlowCard';
 
@@ -80,7 +80,7 @@ function DashboardInner({
       <header className="sticky top-0 z-30 bg-base/80 backdrop-blur-xl border-b border-base-border">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
           <Link to="/" className="shrink-0" title="Inicio">
-            <CantinaLogo size={48} />
+            <AppLogo size={48} />
           </Link>
           <div className="flex-1 min-w-0">
             <p className="font-display italic text-ink text-xl leading-tight">{venue.name}</p>

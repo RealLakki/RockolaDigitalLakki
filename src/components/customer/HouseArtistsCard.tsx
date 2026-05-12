@@ -9,7 +9,7 @@ interface Props {
 }
 
 /**
- * Lista de "Las de siempre" — artistas favoritos del bar. Click en cualquiera
+ * Lista de "Top picks" — artistas sugeridos del local. Click en cualquiera
  * te lleva a su perfil para ver todas sus canciones sin tener que buscar.
  */
 
@@ -58,10 +58,10 @@ export function HouseArtistsCard({ onSelectArtist }: Props) {
     <GlowCard>
       <div className="flex items-baseline justify-between mb-3">
         <h3 className="font-heading text-gold uppercase tracking-widest text-xs">
-          Las de siempre
+          Top picks
         </h3>
         <span className="text-ink-dim text-[10px] font-heading uppercase tracking-wider">
-          Artistas de la casa
+          Sugerencias
         </span>
       </div>
       <p className="text-ink-mute text-xs mb-3 leading-snug">
@@ -82,18 +82,18 @@ export function HouseArtistsCard({ onSelectArtist }: Props) {
               className="artist-chip group flex items-center gap-2 px-3 py-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: found
-                  ? 'linear-gradient(135deg, rgba(240,192,96,0.15) 0%, rgba(200,155,60,0.06) 100%)'
-                  : 'rgba(28,23,18,0.5)',
-                border: '1px solid rgba(200,155,60,0.30)',
+                  ? 'linear-gradient(135deg, rgba(255,160,196,0.20) 0%, rgba(255,218,193,0.30) 100%)'
+                  : 'rgba(255,255,255,0.55)',
+                border: '1px solid rgba(255,106,170,0.35)',
               }}
             >
               <div
                 className="w-7 h-7 rounded-full grid place-items-center shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(240,192,96,0.4), rgba(122,92,26,0.5))',
+                  background: 'linear-gradient(135deg, #FFA0C4, #FF6AAA)',
                 }}
               >
-                <span className="text-[10px] font-heading font-bold text-[#0F0D0A]">
+                <span className="text-[10px] font-heading font-bold text-white">
                   {a.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
                 </span>
               </div>

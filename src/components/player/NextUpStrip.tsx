@@ -51,7 +51,7 @@ export function NextUpStrip({ items }: Props) {
             className={[
               'w-7 h-7 rounded-md grid place-items-center text-xs font-bold shrink-0',
               item.boosted
-                ? 'bg-gradient-gold text-[#0F0D0A] shadow-gold-sm'
+                ? 'bg-gradient-gold text-white shadow-gold-sm'
                 : 'bg-base-elevated text-ink-mute',
             ].join(' ')}
           >

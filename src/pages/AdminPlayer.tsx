@@ -12,7 +12,7 @@ import { NextUpStrip } from '../components/player/NextUpStrip';
 import { PlayerQrPanel } from '../components/player/PlayerQrPanel';
 import { NeonButton } from '../components/common/NeonButton';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
-import { CantinaLogo } from '../components/common/CantinaLogo';
+import { AppLogo } from '../components/common/AppLogo';
 import { joinArtists } from '../utils/formatters';
 import type { Venue } from '../lib/types';
 
@@ -490,7 +490,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       {showOverlay && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-base/95 backdrop-blur-xl">
           <div className="text-center max-w-md p-8">
-            <CantinaLogo size={200} glow />
+            <AppLogo size={200} glow />
             <p className="text-gold font-heading uppercase tracking-[0.22em] text-xs mt-8 mb-2">
               Rocola digital
             </p>

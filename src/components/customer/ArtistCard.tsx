@@ -41,7 +41,7 @@ export function ArtistCard({ artist, onClick }: Props) {
       <div
         className="relative w-14 h-14 rounded-full overflow-hidden shrink-0"
         style={{
-          background: 'linear-gradient(135deg, rgba(200,155,60,0.25), rgba(122,92,26,0.4))',
+          background: 'linear-gradient(135deg, rgba(255,160,196,0.30), rgba(200,47,111,0.45))',
         }}
       >
         {imageUrl ? (
@@ -61,7 +61,7 @@ export function ArtistCard({ artist, onClick }: Props) {
         {/* Borde dorado sutil para que parezca medallón */}
         <div
           className="absolute inset-0 rounded-full pointer-events-none"
-          style={{ boxShadow: 'inset 0 0 0 1px rgba(200,155,60,0.35)' }}
+          style={{ boxShadow: 'inset 0 0 0 1px rgba(255,106,170,0.35)' }}
         />
       </div>
       <div className="flex-1 min-w-0">

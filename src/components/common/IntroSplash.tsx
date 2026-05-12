@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import anime from 'animejs';
-import { CantinaLogo } from './CantinaLogo';
+import { AppLogo } from './AppLogo';
 
 interface Props {
   onDone: () => void;
@@ -8,8 +8,8 @@ interface Props {
   duration?: number;
 }
 
-const TITLE_LETTERS = 'LA CANTINA PLUS'.split('');
-const SUBTITLE = 'CARTAGENA · DESPECHO & POPULAR';
+const TITLE_LETTERS = 'JUKEBOX'.split('');
+const SUBTITLE = 'TU MÚSICA · TU MESA';
 const RAY_COUNT = 14;
 const PARTICLE_COUNT = 36;
 
@@ -152,14 +152,14 @@ export function IntroSplash({ onDone, duration = 3500 }: Props) {
     <div
       ref={rootRef}
       className="fixed inset-0 z-[9999] grid place-items-center overflow-hidden"
-      style={{ background: '#050403' }}
+      style={{ background: '#FFF7E0' }}
     >
-      {/* Background con grain sutil */}
+      {/* Background con halos pastel */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle at center, rgba(200,155,60,0.18) 0%, rgba(15,13,10,0.95) 45%, #050403 75%)',
+            'radial-gradient(circle at center, rgba(255,160,196,0.35) 0%, rgba(255,250,220,0.85) 45%, #FFF7E0 75%)',
         }}
       />
 
@@ -169,7 +169,7 @@ export function IntroSplash({ onDone, duration = 3500 }: Props) {
         className="absolute w-32 h-32 rounded-full pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle, rgba(240,192,96,0.8) 0%, rgba(200,155,60,0.4) 40%, transparent 80%)',
+            'radial-gradient(circle, rgba(255,160,196,0.85) 0%, rgba(255,106,170,0.45) 40%, transparent 80%)',
           filter: 'blur(8px)',
         }}
       />
@@ -190,7 +190,7 @@ export function IntroSplash({ onDone, duration = 3500 }: Props) {
                 width: '2px',
                 height: '300px',
                 background:
-                  'linear-gradient(to top, rgba(200,155,60,0) 0%, rgba(240,192,96,0.85) 50%, rgba(200,155,60,0) 100%)',
+                  'linear-gradient(to top, rgba(255,106,170,0) 0%, rgba(255,160,196,0.85) 50%, rgba(255,106,170,0) 100%)',
                 transform: `translate(-50%, -100%) rotate(${angle}deg)`,
                 transformOrigin: 'bottom center',
               }}
@@ -204,9 +204,9 @@ export function IntroSplash({ onDone, duration = 3500 }: Props) {
         ref={ringRef}
         className="absolute w-72 h-72 rounded-full pointer-events-none"
         style={{
-          border: '2px solid rgba(200,155,60,0.6)',
+          border: '2px solid rgba(255,106,170,0.55)',
           boxShadow:
-            '0 0 30px rgba(200,155,60,0.4), inset 0 0 30px rgba(200,155,60,0.2)',
+            '0 0 30px rgba(255,106,170,0.35), inset 0 0 30px rgba(255,218,193,0.35)',
         }}
       />
 
@@ -229,8 +229,8 @@ export function IntroSplash({ onDone, duration = 3500 }: Props) {
                 height: 4,
                 marginLeft: x,
                 marginTop: y,
-                background: '#F0C060',
-                boxShadow: '0 0 6px rgba(240,192,96,0.85)',
+                background: '#FF6AAA',
+                boxShadow: '0 0 6px rgba(255,160,196,0.85)',
               }}
             />
           );
@@ -241,9 +241,9 @@ export function IntroSplash({ onDone, duration = 3500 }: Props) {
       <div
         ref={logoWrapRef}
         className="relative z-10"
-        style={{ filter: 'drop-shadow(0 0 30px rgba(200,155,60,0.5))' }}
+        style={{ filter: 'drop-shadow(0 0 30px rgba(255,106,170,0.55))' }}
       >
-        <CantinaLogo size={240} glow />
+        <AppLogo size={240} glow />
       </div>
 
       {/* Texto debajo del logo */}

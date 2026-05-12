@@ -31,3 +31,6 @@ yarn-error.log*
 
 # TypeScript build info (generado, no commitear)
 *.tsbuildinfo
+
+# Claude Code local settings (permisos del usuario, no compartir)
+.claude/settings.local.json

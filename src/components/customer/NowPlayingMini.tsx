@@ -17,9 +17,9 @@ export function NowPlayingMini({ nowPlaying }: Props) {
       scale: [0.95, 1],
       opacity: [0, 1],
       boxShadow: [
-        '0 0 0 rgba(200,155,60,0)',
-        '0 0 35px rgba(200,155,60,0.55)',
-        '0 0 14px rgba(200,155,60,0.25)',
+        '0 0 0 rgba(255,106,170,0)',
+        '0 0 35px rgba(255,106,170,0.45)',
+        '0 0 14px rgba(255,106,170,0.20)',
       ],
       duration: 900,
       easing: 'easeOutCubic',

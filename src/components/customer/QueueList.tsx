@@ -35,8 +35,8 @@ export function QueueList({ items, highlightClientId }: Props) {
           translateX: [-20, 0],
           opacity: [0, 1],
           backgroundColor: [
-            'rgba(240, 192, 96, 0.25)',
-            'rgba(28, 23, 18, 0.4)',
+            'rgba(255, 160, 196, 0.30)',
+            'rgba(255, 255, 255, 0.45)',
           ],
           duration: 1100,
           easing: 'easeOutCubic',
@@ -50,7 +50,7 @@ export function QueueList({ items, highlightClientId }: Props) {
     return (
       <div className="text-center py-6 px-4">
         <p className="text-2xl mb-2">🎙️</p>
-        <p className="text-ink font-medium text-sm mb-1">La cantina te escucha</p>
+        <p className="text-ink font-medium text-sm mb-1">El local te escucha</p>
         <p className="text-ink-dim text-xs leading-relaxed">
           Nadie ha pedido música todavía. Busca tu canción arriba y sé tú el que rompa el silencio.
         </p>
@@ -75,7 +75,7 @@ export function QueueList({ items, highlightClientId }: Props) {
               className={[
                 'w-7 h-7 rounded-md grid place-items-center text-xs font-bold shrink-0',
                 item.boosted
-                  ? 'bg-gradient-gold text-[#0F0D0A] shadow-gold-sm'
+                  ? 'bg-gradient-gold text-white shadow-gold-sm'
                   : 'bg-base-elevated text-ink-mute',
               ].join(' ')}
             >

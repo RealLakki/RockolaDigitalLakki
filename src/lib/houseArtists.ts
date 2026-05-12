@@ -2,16 +2,21 @@ import { itunesSearch, itunesSearchArtists } from './itunes';
 import type { TrackSearchResult } from './types';
 
 /**
- * Lista de artistas favoritos del bar — "Las de siempre".
- * Compartida entre la card del cliente y el auto-filler del reproductor.
+ * Artistas sugeridos del local — set genérico de mainstream global.
+ * Sirve tanto para la card "Top picks" del cliente como para el auto-filler
+ * del reproductor cuando la cola se queda vacía.
+ *
+ * Estos artistas son neutrales (no apuntan a ningún género regional)
+ * y pegan bien en bares/restaurantes de cualquier ciudad. Cada local
+ * puede sobreescribir esta lista en el futuro si lo desea.
  */
 export const HOUSE_ARTISTS = [
-  { name: 'Charrito Negro', searchTerm: 'Charrito Negro' },
-  { name: 'Luis Alberto Posada', searchTerm: 'Luis Alberto Posada' },
-  { name: 'Yeison Jiménez', searchTerm: 'Yeison Jimenez' },
-  { name: 'Andariego', searchTerm: 'Andariego' },
-  { name: 'Paola Jara', searchTerm: 'Paola Jara' },
-  { name: 'Jessi Uribe', searchTerm: 'Jessi Uribe' },
+  { name: 'Bad Bunny',    searchTerm: 'Bad Bunny' },
+  { name: 'Taylor Swift', searchTerm: 'Taylor Swift' },
+  { name: 'Karol G',      searchTerm: 'Karol G' },
+  { name: 'The Weeknd',   searchTerm: 'The Weeknd' },
+  { name: 'Dua Lipa',     searchTerm: 'Dua Lipa' },
+  { name: 'Drake',        searchTerm: 'Drake' },
 ];
 
 /**

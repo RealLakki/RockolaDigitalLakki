@@ -16,26 +16,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        // La Cantina Plus — paleta dorada sobre negro cálido
+        // Versión genérica — paleta pastel (cream / teal / coral / mint / peach)
+        // Conservamos los nombres `base`, `gold`, `ink` por compat con todas
+        // las clases existentes; cambia solo el hex que cada slot representa.
         base: {
-          DEFAULT: '#0F0D0A',   // Negro Cantina (fondo)
-          elevated: '#1C1712',  // Oscuro Cálido (cards, nav)
-          card: '#1C1712',
-          border: '#2C2418',    // Borde sutil
+          DEFAULT:  '#FFFADC',   // Cream (página)
+          elevated: '#FFFFFF',   // Cards
+          card:     '#FFFFFF',
+          border:   '#F0E4C8',   // Borde sutil cream-oscuro
         },
+        // `gold` actúa como el acento principal de pop / CTA → coral pink.
         gold: {
-          DEFAULT: '#C89B3C',   // Dorado principal
-          light: '#F0C060',     // Hover / activo
-          dim: '#9A7728',       // shade más oscuro para apoyo
-          deep: '#7A5C1A',      // gradient end
+          DEFAULT: '#FF6AAA',    // Coral principal
+          light:   '#FFA0C4',    // Hover / activo
+          dim:     '#E04A85',    // shade más oscuro
+          deep:    '#C82F6F',    // gradient end
         },
         ink: {
-          DEFAULT: '#F5F0E8',   // Crema texto
-          mute: '#8A7A60',      // Barro muted
-          dim: '#5C4F3C',       // muy tenue
+          DEFAULT: '#0F2A33',    // Texto principal (teal-black)
+          mute:    '#6A8590',    // Texto secundario
+          dim:     '#A0B5BC',    // Texto muy tenue
         },
-        danger: '#B91C1C',      // Rojo Despecho
-        success: '#5C8A3C',     // verde tierra (no muy saturado)
+        // Secundario / brand cool — teal del palette
+        teal: {
+          DEFAULT: '#17A1B9',
+          light:   '#5EC3C2',
+          dim:     '#0D7A8C',
+        },
+        // Soft accents directos (uso ocasional para chips, badges, glows)
+        peach: '#FFDAC1',
+        mint:  '#E6FCD8',
+        cream: '#FFFADC',
+
+        danger:  '#E63A6A',     // pink-red, casa con el coral
+        success: '#6FBF7E',     // mint-derived
       },
       fontFamily: {
         display: ['"Playfair Display"', 'Georgia', 'serif'],
@@ -44,16 +58,18 @@ export default {
         sans:    ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        gold: '0 0 18px rgba(200, 155, 60, 0.45), 0 0 36px rgba(200, 155, 60, 0.18)',
-        'gold-sm': '0 0 8px rgba(200, 155, 60, 0.35)',
-        'gold-lg': '0 0 28px rgba(200, 155, 60, 0.55), 0 0 56px rgba(200, 155, 60, 0.25)',
-        'gold-inset': 'inset 0 0 18px rgba(200, 155, 60, 0.12)',
-        'red-glow': '0 0 18px rgba(185, 28, 28, 0.5)',
+        gold:        '0 0 18px rgba(255,106,170,0.35), 0 0 36px rgba(255,106,170,0.12)',
+        'gold-sm':   '0 0 8px rgba(255,106,170,0.28)',
+        'gold-lg':   '0 0 28px rgba(255,106,170,0.45), 0 0 56px rgba(255,106,170,0.20)',
+        'gold-inset':'inset 0 0 18px rgba(255,106,170,0.10)',
+        'red-glow':  '0 0 18px rgba(230,58,106,0.45)',
+        'teal':      '0 0 18px rgba(23,161,185,0.30)',
       },
       backgroundImage: {
-        'gradient-radial': 'radial-gradient(ellipse at top, rgba(200,155,60,0.14), transparent 60%)',
-        'gradient-gold': 'linear-gradient(135deg, #F0C060 0%, #C89B3C 50%, #7A5C1A 100%)',
-        'gradient-warmth': 'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(200,155,60,0.18), transparent 70%)',
+        'gradient-radial':  'radial-gradient(ellipse at top, rgba(94,195,194,0.20), transparent 60%)',
+        'gradient-gold':    'linear-gradient(135deg, #FFA0C4 0%, #FF6AAA 50%, #C82F6F 100%)',
+        'gradient-warmth':  'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(255,218,193,0.55), transparent 70%)',
+        'gradient-teal':    'linear-gradient(135deg, #5EC3C2 0%, #17A1B9 100%)',
       },
       animation: {
         'pulse-slow': 'pulse 3s ease-in-out infinite',
@@ -61,8 +77,8 @@ export default {
       },
       keyframes: {
         'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 18px rgba(200, 155, 60, 0.4)' },
-          '50%':      { boxShadow: '0 0 36px rgba(200, 155, 60, 0.75)' },
+          '0%, 100%': { boxShadow: '0 0 18px rgba(255, 106, 170, 0.35)' },
+          '50%':      { boxShadow: '0 0 36px rgba(255, 106, 170, 0.65)' },
         },
       },
     },

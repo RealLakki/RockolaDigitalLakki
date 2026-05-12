@@ -119,9 +119,9 @@ function TopRow({
       <div
         className="shrink-0 px-2.5 py-1 rounded-md text-xs font-heading font-bold tabular-nums"
         style={{
-          background: isTop3 ? 'rgba(200,155,60,0.18)' : 'rgba(28,23,18,0.6)',
-          color: isTop3 ? '#F0C060' : '#A89A82',
-          border: '1px solid rgba(200,155,60,0.2)',
+          background: isTop3 ? 'rgba(255,106,170,0.18)' : 'rgba(255,255,255,0.70)',
+          color: isTop3 ? '#C82F6F' : '#6A8590',
+          border: '1px solid rgba(255,106,170,0.25)',
         }}
       >
         ×{row.requestCount}
@@ -135,7 +135,7 @@ function TopRow({
             'shrink-0 rounded-full w-8 h-8 grid place-items-center transition-all',
             disabled
               ? 'bg-base-elevated text-ink-dim cursor-not-allowed'
-              : 'bg-gradient-gold text-[#0F0D0A] shadow-gold-sm hover:shadow-gold hover:scale-110 active:scale-95',
+              : 'bg-gradient-gold text-white shadow-gold-sm hover:shadow-gold hover:scale-110 active:scale-95',
           ].join(' ')}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
