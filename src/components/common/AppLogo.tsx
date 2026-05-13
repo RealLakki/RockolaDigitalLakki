@@ -1,7 +1,7 @@
 interface Props {
   size?: number;
   className?: string;
-  /** Si true, agrega un halo coral suave detrás del logo (para heroes). */
+  /** Si true, agrega un halo cian suave detrás del logo (para heroes). */
   glow?: boolean;
 }
 
@@ -18,10 +18,10 @@ export function AppLogo({ size = 64, className = '', glow = false }: Props) {
     >
       {glow && (
         <div
-          className="absolute inset-0 rounded-full blur-2xl opacity-60 pointer-events-none"
+          className="absolute inset-0 rounded-full blur-2xl opacity-70 pointer-events-none"
           style={{
             background:
-              'radial-gradient(circle, rgba(255,106,170,0.55) 0%, rgba(255,218,193,0.25) 45%, rgba(94,195,194,0) 75%)',
+              'radial-gradient(circle, rgba(0,212,255,0.65) 0%, rgba(91,226,255,0.25) 45%, rgba(0,119,187,0) 75%)',
           }}
         />
       )}
@@ -34,8 +34,8 @@ export function AppLogo({ size = 64, className = '', glow = false }: Props) {
       >
         <defs>
           <linearGradient id={`app-logo-bg-${size}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#FFA0C4" />
-            <stop offset="100%" stopColor="#FF6AAA" />
+            <stop offset="0%" stopColor="#5BE2FF" />
+            <stop offset="100%" stopColor="#00D4FF" />
           </linearGradient>
         </defs>
 
@@ -46,26 +46,26 @@ export function AppLogo({ size = 64, className = '', glow = false }: Props) {
           cy="32"
           r="22"
           fill="none"
-          stroke="#FFFFFF"
+          stroke="#0A0A0F"
           strokeWidth="1.4"
-          opacity="0.50"
+          opacity="0.40"
         />
         <circle
           cx="32"
           cy="32"
           r="14"
           fill="none"
-          stroke="#FFFFFF"
+          stroke="#0A0A0F"
           strokeWidth="1.4"
-          opacity="0.50"
+          opacity="0.40"
         />
 
-        {/* Etiqueta central teal */}
-        <circle cx="32" cy="32" r="6" fill="#17A1B9" />
-        <circle cx="32" cy="32" r="2" fill="#FFFADC" />
+        {/* Etiqueta central negra */}
+        <circle cx="32" cy="32" r="6" fill="#0A0A0F" />
+        <circle cx="32" cy="32" r="2" fill="#5BE2FF" />
 
         {/* Nota musical superpuesta — sobresale del disco */}
-        <g transform="translate(36 16)" fill="#FFFADC">
+        <g transform="translate(36 16)" fill="#0A0A0F">
           <rect x="0" y="0" width="2.5" height="16" rx="1" />
           <ellipse cx="-2" cy="16" rx="4.5" ry="3.5" />
         </g>

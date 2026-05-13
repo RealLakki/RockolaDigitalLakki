@@ -27,11 +27,11 @@ export function Landing() {
       {/* Glow ornamentales en las esquinas */}
       <div
         className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(255,218,193,0.55) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(0,212,255,0.25) 0%, transparent 70%)' }}
       />
       <div
         className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(94,195,194,0.30) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(91,226,255,0.18) 0%, transparent 70%)' }}
       />
 
       <div className="min-h-screen bg-gradient-radial flex flex-col relative">
@@ -59,14 +59,14 @@ export function Landing() {
             <div ref={badgeRef} className="flex items-center gap-3 mb-6">
               <span
                 className="block h-px w-10 sm:w-16"
-                style={{ background: 'linear-gradient(to right, transparent, #FF6AAA)' }}
+                style={{ background: 'linear-gradient(to right, transparent, #00D4FF)' }}
               />
               <span className="text-gold font-heading uppercase tracking-[0.28em] text-[11px] whitespace-nowrap">
                 Rocola digital · Tu mesa, tu música
               </span>
               <span
                 className="block h-px w-10 sm:w-16"
-                style={{ background: 'linear-gradient(to left, transparent, #FF6AAA)' }}
+                style={{ background: 'linear-gradient(to left, transparent, #00D4FF)' }}
               />
             </div>
 
@@ -113,7 +113,7 @@ export function Landing() {
           </div>
         </main>
 
-        <footer className="px-6 py-6 border-t" style={{ borderColor: 'rgba(255,106,170,0.18)' }}>
+        <footer className="px-6 py-6 border-t" style={{ borderColor: 'rgba(0,212,255,0.20)' }}>
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-ink-dim text-xs uppercase tracking-[0.2em] font-heading">
               <span className="text-gold/60">◆</span>
@@ -132,8 +132,8 @@ function Feature({ icon, title, body }: { icon: string; title: string; body: str
     <div
       className="rounded-xl p-4 text-left transition-all hover:-translate-y-0.5"
       style={{
-        background: 'rgba(255, 255, 255, 0.65)',
-        border: '1px solid rgba(94, 195, 194, 0.30)',
+        background: 'rgba(19, 19, 28, 0.65)',
+        border: '1px solid rgba(0, 212, 255, 0.22)',
         backdropFilter: 'blur(12px)',
       }}
     >

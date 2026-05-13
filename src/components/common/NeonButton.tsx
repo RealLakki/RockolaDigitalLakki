@@ -14,17 +14,17 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 // Para el primary usamos arbitrary value del background — garantiza que el
 // gradient se renderice aunque Tailwind no genere bg-gradient-gold por
 // alguna razón de detección.
-const PRIMARY_BG = 'bg-[linear-gradient(135deg,#FFA0C4_0%,#FF6AAA_50%,#C82F6F_100%)]';
+const PRIMARY_BG = 'bg-[linear-gradient(135deg,#5BE2FF_0%,#00D4FF_50%,#0077BB_100%)]';
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    `${PRIMARY_BG} text-white font-bold border border-[#C82F6F] shadow-gold hover:shadow-gold-lg hover:brightness-110 active:scale-[0.97]`,
+    `${PRIMARY_BG} text-[#0A0A0F] font-bold border border-[#5BE2FF] shadow-gold hover:shadow-gold-lg hover:brightness-110 active:scale-[0.97]`,
   ghost:
-    'bg-[rgba(255,255,255,0.65)] text-ink border border-[rgba(94,195,194,0.45)] hover:border-gold hover:text-gold hover:shadow-gold-sm active:scale-[0.97]',
+    'bg-[rgba(19,19,28,0.65)] text-ink border border-[rgba(0,212,255,0.30)] hover:border-gold hover:text-gold hover:shadow-gold-sm active:scale-[0.97]',
   danger:
-    'bg-[rgba(230,58,106,0.10)] text-danger border border-[rgba(230,58,106,0.45)] hover:bg-[rgba(230,58,106,0.18)] hover:shadow-[0_0_15px_rgba(230,58,106,0.45)] active:scale-[0.97]',
+    'bg-[rgba(255,59,92,0.12)] text-danger border border-[rgba(255,59,92,0.45)] hover:bg-[rgba(255,59,92,0.22)] hover:shadow-[0_0_15px_rgba(255,59,92,0.50)] active:scale-[0.97]',
   success:
-    'bg-[rgba(111,191,126,0.12)] text-success border border-[rgba(111,191,126,0.45)] hover:bg-[rgba(111,191,126,0.22)] active:scale-[0.97]',
+    'bg-[rgba(63,232,169,0.12)] text-success border border-[rgba(63,232,169,0.45)] hover:bg-[rgba(63,232,169,0.22)] active:scale-[0.97]',
 };
 
 const sizeClasses: Record<Size, string> = {
@@ -55,7 +55,7 @@ export const NeonButton = forwardRef<HTMLButtonElement, Props>(function NeonButt
         position: absolute; left: ${e.clientX - rect.left - size / 2}px;
         top: ${e.clientY - rect.top - size / 2}px;
         width: ${size}px; height: ${size}px; border-radius: 9999px;
-        background: radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 70%);
+        background: radial-gradient(circle, rgba(91,226,255,0.55) 0%, rgba(0,212,255,0) 70%);
         pointer-events: none; transform: scale(0); opacity: 0.9;
       `;
       localRef.current.appendChild(ripple);

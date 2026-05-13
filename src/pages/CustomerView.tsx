@@ -473,8 +473,8 @@ function YoutubeUrlInput({
     <div
       className="rounded-xl p-3"
       style={{
-        background: 'rgba(255,255,255,0.65)',
-        border: '1px solid rgba(94,195,194,0.30)',
+        background: 'rgba(19,19,28,0.65)',
+        border: '1px solid rgba(0,212,255,0.20)',
       }}
     >
       <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-2">
@@ -514,8 +514,8 @@ function TipHint() {
     <div
       className="rounded-xl px-4 py-3 flex items-center gap-3"
       style={{
-        background: 'linear-gradient(135deg, rgba(255,218,193,0.30) 0%, rgba(255,250,220,0.50) 100%)',
-        border: '1px solid rgba(255,106,170,0.28)',
+        background: 'linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(19,19,28,0.65) 100%)',
+        border: '1px solid rgba(0,212,255,0.30)',
       }}
     >
       <span className="text-xl shrink-0">⚡</span>

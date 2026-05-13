@@ -10,52 +10,52 @@
   body {
     @apply bg-base text-ink font-sans antialiased;
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 218, 193, 0.55), transparent 70%),
-      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(94, 195, 194, 0.22), transparent 70%),
-      radial-gradient(ellipse 50% 40% at 0% 100%, rgba(255, 106, 170, 0.12), transparent 70%);
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 212, 255, 0.20), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(91, 226, 255, 0.10), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 0% 100%, rgba(0, 119, 187, 0.12), transparent 70%);
     background-attachment: fixed;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Scrollbar teal sutil */
+  /* Scrollbar cian neón */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(23, 161, 185, 0.30);
+    background: rgba(0, 212, 255, 0.30);
     border-radius: 4px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(23, 161, 185, 0.55); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.55); }
 
-  ::selection { background: rgba(255, 106, 170, 0.35); color: #0F2A33; }
+  ::selection { background: rgba(0, 212, 255, 0.35); color: #E8F4FF; }
 }
 
 @layer components {
   /* CSS directo en lugar de @apply para evitar que Tailwind no genere
      variantes con opacity (border-gold/25) usadas solo dentro de @layer. */
   .glass {
-    background-color: rgba(255, 255, 255, 0.70);
+    background-color: rgba(19, 19, 28, 0.65);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(94, 195, 194, 0.28);
+    border: 1px solid rgba(0, 212, 255, 0.18);
   }
   .glass-elevated {
-    background-color: rgba(255, 255, 255, 0.90);
+    background-color: rgba(19, 19, 28, 0.85);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 106, 170, 0.30);
+    border: 1px solid rgba(0, 212, 255, 0.32);
   }
   .gold-text {
-    color: #FF6AAA;
-    text-shadow: 0 0 10px rgba(255, 106, 170, 0.40), 0 0 20px rgba(255, 106, 170, 0.20);
+    color: #00D4FF;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.55), 0 0 20px rgba(0, 212, 255, 0.30);
   }
   .gold-border {
-    border: 1px solid rgba(255, 106, 170, 0.45);
-    box-shadow: 0 0 12px rgba(255, 106, 170, 0.20), inset 0 0 10px rgba(255, 218, 193, 0.18);
+    border: 1px solid rgba(0, 212, 255, 0.45);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.25), inset 0 0 10px rgba(0, 212, 255, 0.08);
   }
   .grid-bg {
     background-image:
-      linear-gradient(rgba(23, 161, 185, 0.07) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(23, 161, 185, 0.07) 1px, transparent 1px);
+      linear-gradient(rgba(0, 212, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.06) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 }

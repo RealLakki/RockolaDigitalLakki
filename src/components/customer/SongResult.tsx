@@ -51,7 +51,7 @@ export function SongResult({ track, disabled, disabledReason, onAdd }: Props) {
           'shrink-0 rounded-full w-10 h-10 grid place-items-center transition-all',
           disabled
             ? 'bg-base-elevated text-ink-dim cursor-not-allowed'
-            : 'bg-gradient-gold text-white shadow-gold-sm hover:shadow-gold hover:scale-110 active:scale-95',
+            : 'bg-gradient-gold text-[#0A0A0F] shadow-gold-sm hover:shadow-gold hover:scale-110 active:scale-95',
         ].join(' ')}
       >
         <PlusIcon />

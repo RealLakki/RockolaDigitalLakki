@@ -16,40 +16,41 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Versión genérica — paleta pastel (cream / teal / coral / mint / peach)
-        // Conservamos los nombres `base`, `gold`, `ink` por compat con todas
-        // las clases existentes; cambia solo el hex que cada slot representa.
+        // Paleta tech — negro profundo + azul neón.
+        // Mantenemos los nombres de slot (`base`, `gold`, `ink`) por compat
+        // con todas las utilities existentes; solo cambia el hex que cada
+        // slot representa.
         base: {
-          DEFAULT:  '#FFFADC',   // Cream (página)
-          elevated: '#FFFFFF',   // Cards
-          card:     '#FFFFFF',
-          border:   '#F0E4C8',   // Borde sutil cream-oscuro
+          DEFAULT:  '#0A0A0F',   // Negro profundo (página)
+          elevated: '#13131C',   // Cards / superficies
+          card:     '#13131C',
+          border:   '#23232E',   // Borde sutil
         },
-        // `gold` actúa como el acento principal de pop / CTA → coral pink.
+        // `gold` actúa como el acento principal (CTA, glow, brand) → azul neón.
         gold: {
-          DEFAULT: '#FF6AAA',    // Coral principal
-          light:   '#FFA0C4',    // Hover / activo
-          dim:     '#E04A85',    // shade más oscuro
-          deep:    '#C82F6F',    // gradient end
+          DEFAULT: '#00D4FF',    // Cian neón principal
+          light:   '#5BE2FF',    // Hover / activo
+          dim:     '#0099CC',    // shade más oscuro
+          deep:    '#005F80',    // gradient end
         },
         ink: {
-          DEFAULT: '#0F2A33',    // Texto principal (teal-black)
-          mute:    '#6A8590',    // Texto secundario
-          dim:     '#A0B5BC',    // Texto muy tenue
+          DEFAULT: '#E8F4FF',    // Texto principal (blanco-azulado)
+          mute:    '#7A8B99',    // Texto secundario
+          dim:     '#3D4754',    // Texto muy tenue
         },
-        // Secundario / brand cool — teal del palette
+        // Acento cool secundario (azul más sólido para gradients)
         teal: {
-          DEFAULT: '#17A1B9',
-          light:   '#5EC3C2',
-          dim:     '#0D7A8C',
+          DEFAULT: '#1FB8FF',
+          light:   '#5BE2FF',
+          dim:     '#0077BB',
         },
-        // Soft accents directos (uso ocasional para chips, badges, glows)
-        peach: '#FFDAC1',
-        mint:  '#E6FCD8',
-        cream: '#FFFADC',
+        // Stub colors mantenidos para compat (peach/mint/cream se usan poco):
+        peach: '#1A2440',
+        mint:  '#16323A',
+        cream: '#13131C',
 
-        danger:  '#E63A6A',     // pink-red, casa con el coral
-        success: '#6FBF7E',     // mint-derived
+        danger:  '#FF3B5C',     // rojo neón
+        success: '#3FE8A9',     // verde menta neón
       },
       fontFamily: {
         display: ['"Playfair Display"', 'Georgia', 'serif'],
@@ -58,18 +59,18 @@ export default {
         sans:    ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        gold:        '0 0 18px rgba(255,106,170,0.35), 0 0 36px rgba(255,106,170,0.12)',
-        'gold-sm':   '0 0 8px rgba(255,106,170,0.28)',
-        'gold-lg':   '0 0 28px rgba(255,106,170,0.45), 0 0 56px rgba(255,106,170,0.20)',
-        'gold-inset':'inset 0 0 18px rgba(255,106,170,0.10)',
-        'red-glow':  '0 0 18px rgba(230,58,106,0.45)',
-        'teal':      '0 0 18px rgba(23,161,185,0.30)',
+        gold:        '0 0 18px rgba(0,212,255,0.45), 0 0 36px rgba(0,212,255,0.18)',
+        'gold-sm':   '0 0 8px rgba(0,212,255,0.35)',
+        'gold-lg':   '0 0 28px rgba(0,212,255,0.55), 0 0 56px rgba(0,212,255,0.22)',
+        'gold-inset':'inset 0 0 18px rgba(0,212,255,0.12)',
+        'red-glow':  '0 0 18px rgba(255,59,92,0.50)',
+        'teal':      '0 0 18px rgba(31,184,255,0.40)',
       },
       backgroundImage: {
-        'gradient-radial':  'radial-gradient(ellipse at top, rgba(94,195,194,0.20), transparent 60%)',
-        'gradient-gold':    'linear-gradient(135deg, #FFA0C4 0%, #FF6AAA 50%, #C82F6F 100%)',
-        'gradient-warmth':  'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(255,218,193,0.55), transparent 70%)',
-        'gradient-teal':    'linear-gradient(135deg, #5EC3C2 0%, #17A1B9 100%)',
+        'gradient-radial':  'radial-gradient(ellipse at top, rgba(0,212,255,0.20), transparent 60%)',
+        'gradient-gold':    'linear-gradient(135deg, #5BE2FF 0%, #00D4FF 50%, #0099CC 100%)',
+        'gradient-warmth':  'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,212,255,0.22), transparent 70%)',
+        'gradient-teal':    'linear-gradient(135deg, #5BE2FF 0%, #1FB8FF 100%)',
       },
       animation: {
         'pulse-slow': 'pulse 3s ease-in-out infinite',
@@ -77,8 +78,8 @@ export default {
       },
       keyframes: {
         'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 18px rgba(255, 106, 170, 0.35)' },
-          '50%':      { boxShadow: '0 0 36px rgba(255, 106, 170, 0.65)' },
+          '0%, 100%': { boxShadow: '0 0 18px rgba(0, 212, 255, 0.40)' },
+          '50%':      { boxShadow: '0 0 36px rgba(0, 212, 255, 0.80)' },
         },
       },
     },

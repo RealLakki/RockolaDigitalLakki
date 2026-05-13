@@ -39,7 +39,7 @@ export function GenreSettings({ venue, onUpdate }: Props) {
               className={[
                 'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
                 active
-                  ? 'bg-gradient-gold text-white shadow-gold-sm'
+                  ? 'bg-gradient-gold text-[#0A0A0F] shadow-gold-sm'
                   : 'bg-base-card border border-base-border text-ink-mute hover:border-gold/40 hover:text-ink',
               ].join(' ')}
             >

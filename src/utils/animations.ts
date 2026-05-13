@@ -16,9 +16,9 @@ export const goldPulse = (target: anime.AnimeParams['targets']) =>
   anime({
     targets: target,
     boxShadow: [
-      '0 0 18px rgba(255, 106, 170, 0.35)',
-      '0 0 45px rgba(255, 106, 170, 0.75), 0 0 90px rgba(255, 106, 170, 0.25)',
-      '0 0 18px rgba(255, 106, 170, 0.35)',
+      '0 0 18px rgba(0, 212, 255, 0.35)',
+      '0 0 45px rgba(0, 212, 255, 0.85), 0 0 90px rgba(0, 212, 255, 0.30)',
+      '0 0 18px rgba(0, 212, 255, 0.35)',
     ],
     duration: 2400,
     easing: 'easeInOutSine',

@@ -82,18 +82,18 @@ export function HouseArtistsCard({ onSelectArtist }: Props) {
               className="artist-chip group flex items-center gap-2 px-3 py-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: found
-                  ? 'linear-gradient(135deg, rgba(255,160,196,0.20) 0%, rgba(255,218,193,0.30) 100%)'
-                  : 'rgba(255,255,255,0.55)',
-                border: '1px solid rgba(255,106,170,0.35)',
+                  ? 'linear-gradient(135deg, rgba(0,212,255,0.18) 0%, rgba(19,19,28,0.85) 100%)'
+                  : 'rgba(19,19,28,0.65)',
+                border: '1px solid rgba(0,212,255,0.35)',
               }}
             >
               <div
                 className="w-7 h-7 rounded-full grid place-items-center shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, #FFA0C4, #FF6AAA)',
+                  background: 'linear-gradient(135deg, #5BE2FF, #00D4FF)',
                 }}
               >
-                <span className="text-[10px] font-heading font-bold text-white">
+                <span className="text-[10px] font-heading font-bold text-[#0A0A0F]">
                   {a.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
                 </span>
               </div>

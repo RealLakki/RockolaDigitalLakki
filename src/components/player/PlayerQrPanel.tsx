@@ -23,7 +23,7 @@ export function PlayerQrPanel({ slug, size = 180 }: Props) {
     QRCode.toCanvas(canvasRef.current, url, {
       width: size,
       margin: 1,
-      color: { dark: '#0F2A33', light: '#FFFADC' },
+      color: { dark: '#0A0A0F', light: '#E8F4FF' },
     });
   }, [slug, size]);
 
@@ -45,9 +45,9 @@ export function PlayerQrPanel({ slug, size = 180 }: Props) {
       ref={cardRef}
       className="fixed bottom-4 right-4 z-40 rounded-xl p-2.5 flex flex-col items-center gap-1.5"
       style={{
-        background: 'rgba(255, 255, 255, 0.92)',
-        border: '1px solid rgba(255, 106, 170, 0.40)',
-        boxShadow: '0 0 18px rgba(255, 106, 170, 0.20), 0 10px 30px rgba(15, 42, 51, 0.12)',
+        background: 'rgba(19, 19, 28, 0.90)',
+        border: '1px solid rgba(0, 212, 255, 0.45)',
+        boxShadow: '0 0 18px rgba(0, 212, 255, 0.25), 0 10px 30px rgba(0, 0, 0, 0.50)',
         backdropFilter: 'blur(16px)',
         opacity: 0,
       }}
@@ -55,7 +55,7 @@ export function PlayerQrPanel({ slug, size = 180 }: Props) {
       <p className="text-gold font-heading uppercase tracking-[0.18em] text-[9px]">
         Pide tu canción
       </p>
-      <div className="bg-[#FFFADC] rounded-md p-1.5">
+      <div className="bg-[#E8F4FF] rounded-md p-1.5">
         <canvas ref={canvasRef} />
       </div>
     </div>

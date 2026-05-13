@@ -35,8 +35,8 @@ export function QueueList({ items, highlightClientId }: Props) {
           translateX: [-20, 0],
           opacity: [0, 1],
           backgroundColor: [
-            'rgba(255, 160, 196, 0.30)',
-            'rgba(255, 255, 255, 0.45)',
+            'rgba(0, 212, 255, 0.30)',
+            'rgba(19, 19, 28, 0.45)',
           ],
           duration: 1100,
           easing: 'easeOutCubic',
@@ -75,7 +75,7 @@ export function QueueList({ items, highlightClientId }: Props) {
               className={[
                 'w-7 h-7 rounded-md grid place-items-center text-xs font-bold shrink-0',
                 item.boosted
-                  ? 'bg-gradient-gold text-white shadow-gold-sm'
+                  ? 'bg-gradient-gold text-[#0A0A0F] shadow-gold-sm'
                   : 'bg-base-elevated text-ink-mute',
               ].join(' ')}
             >
