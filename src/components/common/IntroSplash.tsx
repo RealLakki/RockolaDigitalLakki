@@ -12,7 +12,7 @@ const SUBTITLE = 'TU MÚSICA · TU MESA';
 const RAY_COUNT = 14;
 const PARTICLE_COUNT = 36;
 
-export function IntroSplash({ onDone, duration = 3500 }: Props) {
+export function IntroSplash({ onDone, duration = 2000 }: Props) {
   const rootRef      = useRef<HTMLDivElement>(null);
   const flashRef     = useRef<HTMLDivElement>(null);
   const logoWrapRef  = useRef<HTMLDivElement>(null);
@@ -31,7 +31,7 @@ export function IntroSplash({ onDone, duration = 3500 }: Props) {
         onComplete: () => {
           gsap.to(rootRef.current, {
             opacity: 0,
-            duration: 0.65,
+            duration: 0.35,
             ease: 'power2.inOut',
             onComplete: () => { setDone(true); onDone(); },
           });
@@ -43,69 +43,68 @@ export function IntroSplash({ onDone, duration = 3500 }: Props) {
       gsap.set(logoWrapRef.current, { opacity: 0, scale: 0, rotation: -18 });
       gsap.set(raysRef.current?.querySelectorAll('.ray') ?? [], { scaleY: 0, opacity: 0 });
       gsap.set(particlesRef.current?.querySelectorAll('.particle') ?? [], { opacity: 0, scale: 0 });
-      gsap.set(titleRef.current?.querySelectorAll('.letter') ?? [], { opacity: 0, y: 28, scale: 0.8 });
+      gsap.set(titleRef.current?.querySelectorAll('.letter') ?? [], { opacity: 0, y: 20, scale: 0.8 });
       gsap.set(subtitleRef.current, { opacity: 0, letterSpacing: '0.04em' });
 
-      // 1. Flash explosión inicial
+      // 1. Flash
       tl.fromTo(flashRef.current,
         { opacity: 0, scale: 0 },
-        { opacity: 0.85, scale: 28, duration: 0.55, ease: 'expo.out' }
-      ).to(flashRef.current, { opacity: 0, duration: 0.3, ease: 'power2.in' }, '-=0.1');
+        { opacity: 0.85, scale: 22, duration: 0.3, ease: 'expo.out' }
+      ).to(flashRef.current, { opacity: 0, duration: 0.18, ease: 'power2.in' }, '-=0.05');
 
-      // 2. Logo aparece con elastic bounce
+      // 2. Logo con bounce
       tl.to(logoWrapRef.current, {
         scale: 1, opacity: 1, rotation: 0,
-        duration: 0.75, ease: 'back.out(1.8)',
-      }, '-=0.45');
+        duration: 0.45, ease: 'back.out(1.8)',
+      }, '-=0.25');
 
-      // 3. Anillo dorado se expande y desvanece
+      // 3. Anillo
       tl.fromTo(ringRef.current,
         { scale: 0.4, opacity: 0.9 },
-        { scale: 1.8, opacity: 0, duration: 0.9, ease: 'power2.out' },
-        '-=0.6'
+        { scale: 1.8, opacity: 0, duration: 0.5, ease: 'power2.out' },
+        '-=0.38'
       );
 
-      // 4. Rayos radiales — stagger muy rápido
+      // 4. Rayos
       tl.to(raysRef.current?.querySelectorAll('.ray') ?? [], {
         scaleY: 1, opacity: 0.7,
-        duration: 0.5, stagger: 0.022, ease: 'power2.out',
-      }, '-=0.75')
+        duration: 0.25, stagger: 0.012, ease: 'power2.out',
+      }, '-=0.42')
       .to(raysRef.current?.querySelectorAll('.ray') ?? [], {
-        opacity: 0, duration: 0.5, stagger: 0.022, ease: 'power2.in',
-      }, '-=0.2');
+        opacity: 0, duration: 0.22, stagger: 0.012, ease: 'power2.in',
+      }, '-=0.08');
 
-      // 5. Partículas explotan desde el centro
+      // 5. Partículas
       const particles = particlesRef.current?.querySelectorAll('.particle') ?? [];
       particles.forEach((p, i) => {
         const angle = (360 / PARTICLE_COUNT) * i;
-        const dist  = 70 + Math.random() * 90;
+        const dist  = 55 + Math.random() * 60;
         const dx    = Math.cos((angle * Math.PI) / 180) * dist;
         const dy    = Math.sin((angle * Math.PI) / 180) * dist;
         tl.to(p, {
-          opacity: 0.9, scale: 0.6 + Math.random() * 0.8,
+          opacity: 0.9, scale: 0.5 + Math.random() * 0.7,
           x: dx, y: dy,
-          duration: 0.7 + Math.random() * 0.5,
+          duration: 0.35 + Math.random() * 0.2,
           ease: 'power2.out',
-          delay: i * 0.012,
-        }, '-=0.9');
+          delay: i * 0.006,
+        }, '-=0.42');
       });
-      tl.to(particles, { opacity: 0, duration: 0.5 }, '-=0.3');
+      tl.to(particles, { opacity: 0, duration: 0.22 }, '-=0.15');
 
-      // 6. Letras caen una a una con bounce
+      // 6. Letras
       tl.to(titleRef.current?.querySelectorAll('.letter') ?? [], {
         opacity: 1, y: 0, scale: 1,
-        duration: 0.45, stagger: 0.045, ease: 'back.out(2)',
-      }, '-=0.5');
+        duration: 0.28, stagger: 0.028, ease: 'back.out(2)',
+      }, '-=0.28');
 
-      // 7. Subtítulo barre con letter-spacing
+      // 7. Subtítulo
       tl.to(subtitleRef.current, {
         opacity: 1, letterSpacing: '0.28em',
-        duration: 0.65, ease: 'power3.out',
-      }, '-=0.2');
+        duration: 0.32, ease: 'power3.out',
+      }, '-=0.08');
 
-      // 8. Hold para que se aprecie
-      const hold = Math.max(0, duration - 3500);
-      if (hold > 0) tl.to({}, { duration: hold / 1000 });
+      // Hold mínimo para leer el título
+      tl.to({}, { duration: 0.25 });
 
     }, rootRef);
 
