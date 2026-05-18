@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import anime from 'animejs';
+import gsap from 'gsap';
 import { itunesSearchArtists, type ArtistResult } from '../../lib/itunes';
 import { HOUSE_ARTISTS } from '../../lib/houseArtists';
 import { GlowCard } from '../common/GlowCard';
@@ -43,13 +43,9 @@ export function HouseArtistsCard({ onSelectArtist }: Props) {
     if (!ref.current) return;
     const els = ref.current.querySelectorAll('.artist-chip');
     if (els.length > 0) {
-      anime({
-        targets: els,
-        scale: [0.9, 1],
-        opacity: [0, 1],
-        duration: 400,
-        delay: anime.stagger(40),
-        easing: 'easeOutBack',
+      gsap.from(els, {
+        scale: 0.9, opacity: 0,
+        duration: 0.4, stagger: 0.04, ease: 'back.out(1.7)',
       });
     }
   }, []);
@@ -82,15 +78,15 @@ export function HouseArtistsCard({ onSelectArtist }: Props) {
               className="artist-chip group flex items-center gap-2 px-3 py-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: found
-                  ? 'linear-gradient(135deg, rgba(0,212,255,0.18) 0%, rgba(19,19,28,0.85) 100%)'
-                  : 'rgba(19,19,28,0.65)',
-                border: '1px solid rgba(0,212,255,0.35)',
+                  ? 'linear-gradient(135deg, rgba(240,90,26,0.18) 0%, rgba(6,27,74,0.85) 100%)'
+                  : 'rgba(6,27,74,0.65)',
+                border: '1px solid rgba(240,90,26,0.35)',
               }}
             >
               <div
                 className="w-7 h-7 rounded-full grid place-items-center shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, #5BE2FF, #00D4FF)',
+                  background: 'linear-gradient(135deg, #FF7A3D, #F05A1A)',
                 }}
               >
                 <span className="text-[10px] font-heading font-bold text-[#0A0A0F]">

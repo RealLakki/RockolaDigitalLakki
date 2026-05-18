@@ -1,7 +1,7 @@
 interface Props {
   size?: number;
   className?: string;
-  /** Si true, agrega un halo cian suave detrás del logo (para heroes). */
+  /** Si true, agrega un halo naranja suave detrás del logo (para heroes). */
   glow?: boolean;
 }
 
@@ -21,7 +21,7 @@ export function AppLogo({ size = 64, className = '', glow = false }: Props) {
           className="absolute inset-0 rounded-full blur-2xl opacity-70 pointer-events-none"
           style={{
             background:
-              'radial-gradient(circle, rgba(0,212,255,0.65) 0%, rgba(91,226,255,0.25) 45%, rgba(0,119,187,0) 75%)',
+              'radial-gradient(circle, rgba(240,90,26,0.65) 0%, rgba(255,122,61,0.25) 45%, rgba(192,74,20,0) 75%)',
           }}
         />
       )}
@@ -34,8 +34,8 @@ export function AppLogo({ size = 64, className = '', glow = false }: Props) {
       >
         <defs>
           <linearGradient id={`app-logo-bg-${size}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#5BE2FF" />
-            <stop offset="100%" stopColor="#00D4FF" />
+            <stop offset="0%" stopColor="#FF7A3D" />
+            <stop offset="100%" stopColor="#F05A1A" />
           </linearGradient>
         </defs>
 
@@ -62,7 +62,7 @@ export function AppLogo({ size = 64, className = '', glow = false }: Props) {
 
         {/* Etiqueta central negra */}
         <circle cx="32" cy="32" r="6" fill="#0A0A0F" />
-        <circle cx="32" cy="32" r="2" fill="#5BE2FF" />
+        <circle cx="32" cy="32" r="2" fill="#FF7A3D" />
 
         {/* Nota musical superpuesta — sobresale del disco */}
         <g transform="translate(36 16)" fill="#0A0A0F">

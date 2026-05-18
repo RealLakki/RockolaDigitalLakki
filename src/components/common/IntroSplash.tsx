@@ -117,14 +117,14 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
     <div
       ref={rootRef}
       className="fixed inset-0 z-[9999] grid place-items-center overflow-hidden"
-      style={{ background: '#050510' }}
+      style={{ background: '#040E2A' }}
     >
-      {/* Halo de fondo */}
+      {/* Halo de fondo — naranja cálido desde el centro */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle at center, rgba(0,212,255,0.28) 0%, rgba(10,10,15,0.95) 45%, #050510 75%)',
+            'radial-gradient(circle at center, rgba(240,90,26,0.25) 0%, rgba(6,27,74,0.96) 45%, #040E2A 75%)',
         }}
       />
 
@@ -134,7 +134,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
         className="absolute w-32 h-32 rounded-full pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle, rgba(91,226,255,0.9) 0%, rgba(0,212,255,0.5) 40%, transparent 80%)',
+            'radial-gradient(circle, rgba(255,180,80,0.95) 0%, rgba(240,90,26,0.60) 40%, transparent 80%)',
           filter: 'blur(6px)',
         }}
       />
@@ -153,7 +153,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
               width: '2px',
               height: '300px',
               background:
-                'linear-gradient(to top, rgba(0,212,255,0) 0%, rgba(91,226,255,0.9) 50%, rgba(0,212,255,0) 100%)',
+                'linear-gradient(to top, rgba(240,90,26,0) 0%, rgba(255,150,60,0.9) 50%, rgba(240,90,26,0) 100%)',
               transform: `translate(-50%, -100%) rotate(${(360 / RAY_COUNT) * i}deg)`,
               transformOrigin: 'bottom center',
             }}
@@ -166,12 +166,12 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
         ref={ringRef}
         className="absolute w-72 h-72 rounded-full pointer-events-none"
         style={{
-          border: '2px solid rgba(0,212,255,0.7)',
-          boxShadow: '0 0 30px rgba(0,212,255,0.45), inset 0 0 30px rgba(91,226,255,0.20)',
+          border: '2px solid rgba(240,90,26,0.75)',
+          boxShadow: '0 0 30px rgba(240,90,26,0.50), inset 0 0 30px rgba(255,150,60,0.18)',
         }}
       />
 
-      {/* Partículas */}
+      {/* Partículas — naranja cálido + crema */}
       <div ref={particlesRef} className="absolute w-0 h-0 pointer-events-none">
         {Array.from({ length: PARTICLE_COUNT }).map((_, i) => (
           <div
@@ -180,8 +180,8 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
             style={{
               width: 4 + Math.random() * 3,
               height: 4 + Math.random() * 3,
-              background: i % 3 === 0 ? '#5BE2FF' : '#00D4FF',
-              boxShadow: '0 0 8px rgba(91,226,255,0.9)',
+              background: i % 3 === 0 ? '#EED9B8' : i % 3 === 1 ? '#F05A1A' : '#FF7A3D',
+              boxShadow: '0 0 8px rgba(240,90,26,0.85)',
               transform: 'translate(-50%, -50%)',
             }}
           />
@@ -192,7 +192,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
       <div
         ref={logoWrapRef}
         className="relative z-10"
-        style={{ filter: 'drop-shadow(0 0 32px rgba(0,212,255,0.7))' }}
+        style={{ filter: 'drop-shadow(0 0 32px rgba(240,90,26,0.70))' }}
       >
         <AppLogo size={240} glow />
       </div>

@@ -75,7 +75,7 @@ export function AdminGate({ children }: Props) {
       {/* Glow ornamentales */}
       <div
         className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(0,212,255,0.25) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(240,90,26,0.25) 0%, transparent 70%)' }}
       />
       <div
         className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full pointer-events-none"

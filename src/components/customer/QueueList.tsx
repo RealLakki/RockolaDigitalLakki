@@ -32,7 +32,7 @@ export function QueueList({ items, highlightClientId }: Props) {
         if (!id || prevIdsRef.current.has(id)) return;
 
         gsap.fromTo(row,
-          { x: -28, opacity: 0, backgroundColor: 'rgba(0,212,255,0.28)' },
+          { x: -28, opacity: 0, backgroundColor: 'rgba(240,90,26,0.28)' },
           { x: 0,   opacity: 1, backgroundColor: 'rgba(0,0,0,0)',
             duration: 0.55, ease: 'back.out(1.4)' }
         );

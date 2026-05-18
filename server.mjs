@@ -8,6 +8,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3100;
 
+// Necesario para que express-rate-limit lea la IP real detrás de Nginx
+app.set('trust proxy', 1);
+
 // ─── API keys (server-only, nunca expuestas al cliente) ───────────────────────
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const LASTFM_API_KEY  = process.env.VITE_LASTFM_API_KEY || process.env.LASTFM_API_KEY;

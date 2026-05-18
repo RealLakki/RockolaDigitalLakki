@@ -119,9 +119,9 @@ function TopRow({
       <div
         className="shrink-0 px-2.5 py-1 rounded-md text-xs font-heading font-bold tabular-nums"
         style={{
-          background: isTop3 ? 'rgba(0,212,255,0.18)' : 'rgba(19,19,28,0.70)',
-          color: isTop3 ? '#5BE2FF' : '#7A8B99',
-          border: '1px solid rgba(0,212,255,0.30)',
+          background: isTop3 ? 'rgba(240,90,26,0.18)' : 'rgba(6,27,74,0.70)',
+          color: isTop3 ? '#FF7A3D' : '#8B6E50',
+          border: '1px solid rgba(240,90,26,0.30)',
         }}
       >
         ×{row.requestCount}
