@@ -1,6 +1,5 @@
-﻿import { useEffect, useRef } from 'react';
-import anime from 'animejs';
-import { staggerList } from '../../utils/animations';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import { joinArtists } from '../../utils/formatters';
 import type { QueueItem } from '../../lib/types';
 
@@ -10,39 +9,36 @@ interface Props {
 }
 
 export function QueueList({ items, highlightClientId }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const prevIdsRef = useRef<Set<string>>(new Set());
-  const isFirstRenderRef = useRef(true);
+  const containerRef   = useRef<HTMLDivElement>(null);
+  const prevIdsRef     = useRef<Set<string>>(new Set());
+  const isFirstRender  = useRef(true);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const allRows = containerRef.current.querySelectorAll('.queue-row');
 
-    if (isFirstRenderRef.current) {
-      // Primer render: stagger entry
-      if (allRows.length > 0) staggerList(allRows);
-      isFirstRenderRef.current = false;
-    } else {
-      // Renders subsiguientes: solo highlight a los nuevos
-      const newRows: Element[] = [];
-      allRows.forEach((row) => {
-        const id = row.getAttribute('data-id');
-        if (id && !prevIdsRef.current.has(id)) newRows.push(row);
-      });
-      if (newRows.length > 0) {
-        anime({
-          targets: newRows,
-          translateX: [-20, 0],
-          opacity: [0, 1],
-          backgroundColor: [
-            'rgba(0, 212, 255, 0.30)',
-            'rgba(19, 19, 28, 0.45)',
-          ],
-          duration: 1100,
-          easing: 'easeOutCubic',
+    if (isFirstRender.current) {
+      if (allRows.length > 0) {
+        gsap.from(allRows, {
+          x: -24, opacity: 0,
+          duration: 0.42, stagger: 0.055, ease: 'power3.out',
         });
       }
+      isFirstRender.current = false;
+    } else {
+      // Solo animar los items nuevos
+      allRows.forEach((row) => {
+        const id = row.getAttribute('data-id');
+        if (!id || prevIdsRef.current.has(id)) return;
+
+        gsap.fromTo(row,
+          { x: -28, opacity: 0, backgroundColor: 'rgba(0,212,255,0.28)' },
+          { x: 0,   opacity: 1, backgroundColor: 'rgba(0,0,0,0)',
+            duration: 0.55, ease: 'back.out(1.4)' }
+        );
+      });
     }
+
     prevIdsRef.current = new Set(items.map((i) => i.id));
   }, [items]);
 
@@ -67,8 +63,10 @@ export function QueueList({ items, highlightClientId }: Props) {
             key={item.id}
             data-id={item.id}
             className={[
-              'queue-row flex items-center gap-3 rounded-xl px-3 py-2 transition-all',
-              isMine ? 'bg-gold/10 border border-gold/30' : 'bg-base-card/40 border border-transparent',
+              'queue-row flex items-center gap-3 rounded-xl px-3 py-2 transition-colors',
+              isMine
+                ? 'bg-gold/10 border border-gold/30'
+                : 'bg-base-card/40 border border-transparent',
             ].join(' ')}
           >
             <div
@@ -93,7 +91,9 @@ export function QueueList({ items, highlightClientId }: Props) {
               <p className="text-ink text-sm font-medium truncate">{item.track.title}</p>
               <p className="text-ink-mute text-xs truncate">{joinArtists(item.track.artists)}</p>
             </div>
-            {isMine && <span className="text-gold text-xs font-display shrink-0">tu pick</span>}
+            {isMine && (
+              <span className="text-gold text-xs font-display shrink-0">tu pick</span>
+            )}
           </div>
         );
       })}

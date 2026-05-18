@@ -1,5 +1,5 @@
-﻿import { useEffect, useRef } from 'react';
-import anime from 'animejs';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 
 interface Props {
   value: string;
@@ -9,17 +9,34 @@ interface Props {
 }
 
 export function SearchBar({ value, onChange, placeholder, autoFocus }: Props) {
-  const ringRef = useRef<HTMLDivElement>(null);
+  const ringRef     = useRef<HTMLDivElement>(null);
+  const inputRef    = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Glow ring responde al contenido
   useEffect(() => {
     if (!ringRef.current) return;
-    anime({
-      targets: ringRef.current,
-      opacity: value.length > 0 ? [0.3, 0.9] : [0.9, 0.3],
-      duration: 400,
-      easing: 'easeOutQuad',
+    gsap.to(ringRef.current, {
+      opacity: value.length > 0 ? 0.9 : 0.3,
+      duration: 0.35,
+      ease: 'power2.out',
     });
   }, [value]);
+
+  // Foco: pulso de entrada en el container
+  const handleFocus = () => {
+    if (!containerRef.current) return;
+    gsap.to(containerRef.current, { scale: 1.015, duration: 0.2, ease: 'power2.out' });
+    gsap.to(ringRef.current, { opacity: 0.75, duration: 0.25 });
+  };
+
+  const handleBlur = () => {
+    if (!containerRef.current) return;
+    gsap.to(containerRef.current, { scale: 1, duration: 0.25, ease: 'power2.inOut' });
+    gsap.to(ringRef.current, {
+      opacity: value.length > 0 ? 0.9 : 0.3, duration: 0.3,
+    });
+  };
 
   return (
     <div className="relative">
@@ -27,12 +44,18 @@ export function SearchBar({ value, onChange, placeholder, autoFocus }: Props) {
         ref={ringRef}
         className="absolute -inset-px rounded-2xl bg-gradient-gold blur-md opacity-30 pointer-events-none"
       />
-      <div className="relative flex items-center gap-3 glass rounded-2xl px-5 py-4 gold-border">
+      <div
+        ref={containerRef}
+        className="relative flex items-center gap-3 glass rounded-2xl px-5 py-4 gold-border"
+      >
         <SearchIcon />
         <input
+          ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholder={placeholder ?? 'Busca tu canción...'}
           autoFocus={autoFocus}
           className="flex-1 bg-transparent outline-none text-ink placeholder:text-ink-dim text-base"

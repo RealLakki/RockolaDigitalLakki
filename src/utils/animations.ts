@@ -1,68 +1,33 @@
-import anime from 'animejs';
+import gsap from 'gsap';
 
-/** Entra desde abajo con bounce + fade. Para tarjetas de canciones que aparecen. */
-export const enterFromBottom = (target: anime.AnimeParams['targets'], delay = 0) =>
-  anime({
-    targets: target,
-    translateY: [24, 0],
-    opacity: [0, 1],
-    duration: 600,
-    delay,
-    easing: 'cubicBezier(0.16, 1, 0.3, 1)',
+export const enterFromBottom = (
+  target: Element | Element[] | NodeListOf<Element>,
+  delay = 0,
+) =>
+  gsap.from(target, {
+    y: 24, opacity: 0, duration: 0.5, delay: delay / 1000, ease: 'power3.out',
   });
 
-/** Pulso de glow dorado — para botones primarios o el "now playing". */
-export const goldPulse = (target: anime.AnimeParams['targets']) =>
-  anime({
-    targets: target,
-    boxShadow: [
-      '0 0 18px rgba(0, 212, 255, 0.35)',
-      '0 0 45px rgba(0, 212, 255, 0.85), 0 0 90px rgba(0, 212, 255, 0.30)',
-      '0 0 18px rgba(0, 212, 255, 0.35)',
-    ],
-    duration: 2400,
-    easing: 'easeInOutSine',
-    loop: true,
+export const goldPulse = (target: Element) =>
+  gsap.to(target, {
+    boxShadow: '0 0 45px rgba(0,212,255,0.85), 0 0 90px rgba(0,212,255,0.30)',
+    duration: 1.4, yoyo: true, repeat: -1, ease: 'sine.inOut',
   });
 
-/** Confirmación cuando se agrega canción — flash + bounce. */
-export const confirmAdd = (target: anime.AnimeParams['targets']) =>
-  anime({
-    targets: target,
-    scale: [
-      { value: 0.92, duration: 120, easing: 'easeOutQuad' },
-      { value: 1.05, duration: 200, easing: 'easeOutBack' },
-      { value: 1, duration: 250, easing: 'easeOutQuad' },
-    ],
-  });
+export const confirmAdd = (target: Element) => {
+  gsap.timeline()
+    .to(target, { scale: 0.88, duration: 0.1, ease: 'power2.in' })
+    .to(target, { scale: 1.12, duration: 0.22, ease: 'back.out(2.5)' })
+    .to(target, { scale: 1, duration: 0.22, ease: 'power2.out' });
+};
 
-/** Sale al fondo y se desvanece. */
-export const exitToTop = (target: anime.AnimeParams['targets']) =>
-  anime({
-    targets: target,
-    translateY: -32,
-    opacity: 0,
-    duration: 400,
-    easing: 'easeInQuad',
-  });
+export const exitToTop = (target: Element) =>
+  gsap.to(target, { y: -32, opacity: 0, duration: 0.35, ease: 'power2.in' });
 
-/** Sweep de entrada para títulos grandes. */
-export const titleSweep = (target: anime.AnimeParams['targets']) =>
-  anime({
-    targets: target,
-    translateX: [-40, 0],
-    opacity: [0, 1],
-    duration: 800,
-    easing: 'cubicBezier(0.22, 1, 0.36, 1)',
-  });
+export const titleSweep = (target: Element) =>
+  gsap.from(target, { x: -40, opacity: 0, duration: 0.65, ease: 'power3.out' });
 
-/** Stagger de items en cola con efecto cascada. */
-export const staggerList = (targets: anime.AnimeParams['targets']) =>
-  anime({
-    targets,
-    translateX: [-20, 0],
-    opacity: [0, 1],
-    duration: 500,
-    delay: anime.stagger(60),
-    easing: 'easeOutCubic',
+export const staggerList = (targets: NodeListOf<Element> | Element[]) =>
+  gsap.from(targets, {
+    x: -20, opacity: 0, duration: 0.42, stagger: 0.055, ease: 'power3.out',
   });

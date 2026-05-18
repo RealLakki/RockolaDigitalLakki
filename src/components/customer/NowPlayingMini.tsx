@@ -1,29 +1,35 @@
-﻿import { useEffect, useRef } from 'react';
-import anime from 'animejs';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import { joinArtists } from '../../utils/formatters';
 import type { QueueItem } from '../../lib/types';
 
-interface Props {
-  nowPlaying: QueueItem | null;
-}
+interface Props { nowPlaying: QueueItem | null; }
 
 export function NowPlayingMini({ nowPlaying }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref     = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(() => {
     if (!nowPlaying || !ref.current) return;
-    anime({
-      targets: ref.current,
-      scale: [0.95, 1],
-      opacity: [0, 1],
-      boxShadow: [
-        '0 0 0 rgba(0,212,255,0)',
-        '0 0 35px rgba(0,212,255,0.55)',
-        '0 0 14px rgba(0,212,255,0.25)',
-      ],
-      duration: 900,
-      easing: 'easeOutCubic',
+
+    // Matar glow anterior si existía
+    glowRef.current?.kill();
+
+    // Entrada: sube + aparece + glow flash
+    gsap.fromTo(ref.current,
+      { y: 10, opacity: 0, scale: 0.96, boxShadow: '0 0 0px rgba(0,212,255,0)' },
+      { y: 0,  opacity: 1, scale: 1,    boxShadow: '0 0 28px rgba(0,212,255,0.5)',
+        duration: 0.55, ease: 'back.out(1.6)' }
+    );
+
+    // Glow respiratorio continuo
+    glowRef.current = gsap.to(ref.current, {
+      boxShadow: '0 0 48px rgba(0,212,255,0.85), 0 0 90px rgba(0,212,255,0.25)',
+      duration: 1.6, yoyo: true, repeat: -1, ease: 'sine.inOut',
+      delay: 0.6,
     });
+
+    return () => { glowRef.current?.kill(); };
   }, [nowPlaying?.id]);
 
   if (!nowPlaying) {
@@ -53,18 +59,33 @@ export function NowPlayingMini({ nowPlaying }: Props) {
   );
 }
 
-const Bars = () => (
-  <div className="flex items-end gap-0.5 h-5">
-    {[0, 1, 2].map((i) => (
-      <span
-        key={i}
-        className="w-1 bg-gold rounded-sm animate-pulse"
-        style={{
-          height: '100%',
-          animationDelay: `${i * 150}ms`,
-          animationDuration: '700ms',
-        }}
-      />
-    ))}
-  </div>
-);
+function Bars() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const bars = Array.from(ref.current.querySelectorAll('.bar'));
+    const tweens = bars.map((bar, i) =>
+      gsap.to(bar, {
+        scaleY: 0.15 + Math.random() * 0.1,
+        yoyo: true, repeat: -1,
+        duration: 0.38 + i * 0.13,
+        ease: 'sine.inOut',
+        delay: i * 0.18,
+      })
+    );
+    return () => tweens.forEach((t) => t.kill());
+  }, []);
+
+  return (
+    <div ref={ref} className="flex items-end gap-[3px] h-5">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="bar w-[3px] bg-gold rounded-sm"
+          style={{ height: '100%', transformOrigin: 'bottom' }}
+        />
+      ))}
+    </div>
+  );
+}

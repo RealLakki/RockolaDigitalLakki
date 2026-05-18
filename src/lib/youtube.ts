@@ -19,7 +19,6 @@ export const YT_AUDIO_PROVIDER_PREFIX = 'yt-audio:';
  * Console — de lo contrario cualquiera puede agotarte la cuota.
  */
 
-const YT_API = 'https://www.googleapis.com/youtube/v3';
 const MIN_ACCEPTABLE_SCORE = 28;
 const MAX_RESULTS = 25;
 
@@ -47,14 +46,10 @@ function isoDurationToMs(iso: string): number {
 
 async function searchVideos(query: string): Promise<string[]> {
   const params = new URLSearchParams({
-    key: import.meta.env.VITE_YOUTUBE_API_KEY,
-    part: 'snippet',
-    type: 'video',
-    videoCategoryId: '10',
-    maxResults: String(MAX_RESULTS),
     q: query,
+    maxResults: String(MAX_RESULTS),
   });
-  const res = await fetch(`${YT_API}/search?${params}`);
+  const res = await fetch(`/api/youtube-search?${params}`);
   if (!res.ok) throw new Error(`YT search failed: ${res.status}`);
   const data = (await res.json()) as { items: YtSearchItem[] };
   return data.items.map((i) => i.id.videoId).filter(Boolean);
@@ -63,11 +58,9 @@ async function searchVideos(query: string): Promise<string[]> {
 async function getVideoDetails(ids: string[]): Promise<YoutubeCandidate[]> {
   if (ids.length === 0) return [];
   const params = new URLSearchParams({
-    key: import.meta.env.VITE_YOUTUBE_API_KEY,
-    part: 'snippet,contentDetails,statistics',
     id: ids.join(','),
   });
-  const res = await fetch(`${YT_API}/videos?${params}`);
+  const res = await fetch(`/api/youtube-videos?${params}`);
   if (!res.ok) throw new Error(`YT videos failed: ${res.status}`);
   const data = (await res.json()) as { items: YtVideosItem[] };
 

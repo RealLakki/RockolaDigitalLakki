@@ -1,4 +1,5 @@
-﻿import { useCallback, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import gsap from 'gsap';
 import { Link, useParams } from 'react-router-dom';
 import { useVenue } from '../hooks/useVenue';
 import { useQueue } from '../hooks/useQueue';
@@ -180,16 +181,7 @@ function CustomerInner({ venue }: { venue: Venue }) {
         </footer>
       </main>
 
-      {toast && (
-        <div
-          className={[
-            'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl glass-elevated text-sm shadow-gold',
-            toast.kind === 'ok' ? 'text-success' : 'text-danger',
-          ].join(' ')}
-        >
-          {toast.msg}
-        </div>
-      )}
+      {toast && <AnimatedToast msg={toast.msg} kind={toast.kind} />}
     </div>
   );
 }
@@ -227,6 +219,17 @@ function HomeView({
   const { results: artists, loading: aLoading } = useArtistSearch(tab === 'artists' ? query : '');
   const ytFallback = useYoutubeFallback();
   const showFallbackResults = ytFallback.queriedFor === query.trim() && ytFallback.results.length > 0;
+
+  // Stagger de tarjetas cuando termina la búsqueda
+  const songsListRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (sLoading || !songsListRef.current || songs.length === 0) return;
+    gsap.from(songsListRef.current.children, {
+      y: 18, opacity: 0,
+      duration: 0.35, stagger: 0.045, ease: 'power3.out',
+      clearProps: 'all',
+    });
+  }, [sLoading, songs.length]);
 
   return (
     <>
@@ -273,20 +276,22 @@ function HomeView({
                 }
               />
             )}
-            {songs.map((t) => {
-              const blocked = isBlocked(t);
-              const dup = isAlreadyInQueue(t);
-              const reason = blocked ? 'Bloqueada por el bar' : dup ? 'Ya está en la cola' : undefined;
-              return (
-                <SongResult
-                  key={t.providerId}
-                  track={t}
-                  disabled={blocked || dup || adding === t.providerId}
-                  disabledReason={reason}
-                  onAdd={onAddTrack}
-                />
-              );
-            })}
+            <div ref={songsListRef} className="space-y-2">
+              {songs.map((t) => {
+                const blocked = isBlocked(t);
+                const dup = isAlreadyInQueue(t);
+                const reason = blocked ? 'Bloqueada por el bar' : dup ? 'Ya está en la cola' : undefined;
+                return (
+                  <SongResult
+                    key={t.providerId}
+                    track={t}
+                    disabled={blocked || dup || adding === t.providerId}
+                    disabledReason={reason}
+                    onAdd={onAddTrack}
+                  />
+                );
+              })}
+            </div>
 
             {!sLoading && (
               <div className="pt-3 space-y-3">
@@ -539,6 +544,28 @@ function BackHeader({ onBack, title, subtitle }: { onBack: () => void; title: st
         <p className="text-ink font-display text-lg truncate">{title}</p>
         {subtitle && <p className="text-ink-mute text-xs truncate">{subtitle}</p>}
       </div>
+    </div>
+  );
+}
+
+function AnimatedToast({ msg, kind }: { msg: string; kind: 'ok' | 'err' }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    gsap.fromTo(ref.current,
+      { y: 48, opacity: 0, scale: 0.88 },
+      { y: 0,  opacity: 1, scale: 1, duration: 0.38, ease: 'back.out(1.8)' }
+    );
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className={[
+        'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl glass-elevated text-sm shadow-gold whitespace-nowrap',
+        kind === 'ok' ? 'text-success' : 'text-danger',
+      ].join(' ')}
+    >
+      {msg}
     </div>
   );
 }
