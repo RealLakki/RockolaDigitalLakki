@@ -75,7 +75,7 @@ export function AdminGate({ children }: Props) {
       {/* Glow ornamentales */}
       <div
         className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(240,90,26,0.25) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(232,184,0,0.22) 0%, transparent 70%)' }}
       />
       <div
         className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
@@ -86,9 +86,9 @@ export function AdminGate({ children }: Props) {
         ref={cardRef}
         className="relative w-full max-w-sm rounded-2xl p-8 text-center"
         style={{
-          background: 'rgba(19, 19, 28, 0.88)',
-          border: '1px solid rgba(0, 212, 255, 0.35)',
-          boxShadow: '0 0 30px rgba(0, 212, 255, 0.18), 0 20px 60px rgba(0, 0, 0, 0.50)',
+          background: 'rgba(28, 18, 9, 0.92)',
+          border: '1px solid rgba(232, 184, 0, 0.35)',
+          boxShadow: '0 0 30px rgba(232, 184, 0, 0.18), 0 20px 60px rgba(0, 0, 0, 0.60)',
           backdropFilter: 'blur(20px)',
         }}
       >
@@ -119,12 +119,12 @@ export function AdminGate({ children }: Props) {
             style={{
               background: 'rgba(10, 10, 15, 0.75)',
               border: error
-                ? '1px solid rgba(255, 59, 92, 0.60)'
-                : '1px solid rgba(0, 212, 255, 0.35)',
-              color: '#E8F4FF',
+                ? '1px solid rgba(182, 40, 40, 0.70)'
+                : '1px solid rgba(232, 184, 0, 0.35)',
+              color: '#F2E8D0',
               boxShadow: error
-                ? '0 0 14px rgba(255, 59, 92, 0.35)'
-                : 'inset 0 0 8px rgba(0, 212, 255, 0.10)',
+                ? '0 0 14px rgba(182, 40, 40, 0.35)'
+                : 'inset 0 0 8px rgba(232, 184, 0, 0.10)',
             }}
           />
 

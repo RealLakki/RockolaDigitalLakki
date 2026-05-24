@@ -85,14 +85,14 @@ function DashboardInner({
           <div className="flex-1 min-w-0">
             <p className="font-display italic text-ink text-xl leading-tight">{venue.name}</p>
             <p className="text-ink-mute text-[11px] uppercase tracking-widest font-heading">
-              Panel admin · control en tiempo real
+              Administrador · control en tiempo real
             </p>
           </div>
           <Link
             to={`/v/${venue.slug}`}
             className="hidden md:inline text-ink-mute hover:text-gold text-xs font-heading uppercase tracking-wider transition"
           >
-            Vista cliente
+            Vista Cliente
           </Link>
           <Link
             to="/"

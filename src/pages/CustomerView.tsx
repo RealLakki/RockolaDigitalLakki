@@ -19,6 +19,7 @@ import { AnimatedLogo } from '../components/common/AnimatedLogo';
 import { AppLogo } from '../components/common/AppLogo';
 import { EmptyState } from '../components/common/EmptyState';
 import { NeonButton } from '../components/common/NeonButton';
+import { GuideTour, isTourDone, markTourDone } from '../components/customer/GuideTour';
 import { enqueueTrack } from '../lib/supabase';
 import { extractYoutubeVideoId, isYoutubeProvidedTrack, resolveOnYoutube, youtubeUrlToTrack, ytTrackToResolved } from '../lib/youtube';
 import { useYoutubeFallback } from '../hooks/useYoutubeFallback';
@@ -51,8 +52,16 @@ function CustomerInner({ venue }: { venue: Venue }) {
   const [adding, setAdding] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'err' } | null>(null);
   const [name, setNameState] = useState(getClientName() ?? '');
+  const [showTour, setShowTour] = useState(false);
 
   const clientId = useMemo(() => getClientId(), []);
+
+  // Muestra el guide tour si el cliente nunca lo ha completado
+  useEffect(() => {
+    if (isTourDone()) return;
+    const t = window.setTimeout(() => setShowTour(true), 900);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const showToast = useCallback((msg: string, kind: 'ok' | 'err') => {
     setToast({ msg, kind });
@@ -121,6 +130,18 @@ function CustomerInner({ venue }: { venue: Venue }) {
               La música la pones tú
             </p>
           </Link>
+          {/* Botón para reiniciar el tour */}
+          <button
+            onClick={() => { setShowTour(true); }}
+            title="Ver guía de uso"
+            className="shrink-0 text-ink-dim hover:text-gold transition p-1"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -174,14 +195,19 @@ function CustomerInner({ venue }: { venue: Venue }) {
           <div className="flex gap-3 text-[10px] uppercase tracking-widest font-heading text-ink-dim mt-2">
             <Link to="/" className="hover:text-gold transition">← Inicio</Link>
             <span className="text-gold/30">·</span>
-            <Link to={`/admin/${venue.slug}`} className="hover:text-gold transition">Panel admin</Link>
+            <Link to={`/admin/${venue.slug}`} className="hover:text-gold transition">Administrador</Link>
             <span className="text-gold/30">·</span>
-            <Link to={`/admin/${venue.slug}/player`} className="hover:text-gold transition">Reproductor</Link>
+            <Link to={`/admin/${venue.slug}/player`} className="hover:text-gold transition">Televisor</Link>
           </div>
         </footer>
       </main>
 
       {toast && <AnimatedToast msg={toast.msg} kind={toast.kind} />}
+
+      <GuideTour
+        show={showTour}
+        onDone={() => { markTourDone(); setShowTour(false); }}
+      />
     </div>
   );
 }
@@ -478,8 +504,8 @@ function YoutubeUrlInput({
     <div
       className="rounded-xl p-3"
       style={{
-        background: 'rgba(19,19,28,0.65)',
-        border: '1px solid rgba(240,90,26,0.20)',
+        background: 'rgba(28,18,9,0.70)',
+        border: '1px solid rgba(232,184,0,0.20)',
       }}
     >
       <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-2">
@@ -519,14 +545,14 @@ function TipHint() {
     <div
       className="rounded-xl px-4 py-3 flex items-center gap-3"
       style={{
-        background: 'linear-gradient(135deg, rgba(240,90,26,0.12) 0%, rgba(6,27,74,0.65) 100%)',
-        border: '1px solid rgba(240,90,26,0.30)',
+        background: 'linear-gradient(135deg, rgba(232,184,0,0.12) 0%, rgba(28,18,9,0.75) 100%)',
+        border: '1px solid rgba(232,184,0,0.30)',
       }}
     >
       <span className="text-xl shrink-0">⚡</span>
       <div className="flex-1 min-w-0">
         <p className="text-gold font-heading uppercase tracking-wider text-[10px]">
-          ¿Apurada por escuchar tu canción?
+          ¿Apurado por escuchar tu canción?
         </p>
         <p className="text-ink-mute text-xs leading-snug mt-0.5">
           Acércate a la barra con una propina y la subimos al frente.

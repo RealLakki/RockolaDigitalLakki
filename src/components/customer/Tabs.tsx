@@ -9,8 +9,8 @@ export function Tabs<T extends string>({ options, value, onChange }: Props<T>) {
     <div
       className="flex gap-1 rounded-xl p-1"
       style={{
-        background: 'rgba(19, 19, 28, 0.75)',
-        border: '1px solid rgba(240, 90, 26, 0.25)',
+        background: 'rgba(28, 18, 9, 0.80)',
+        border: '1px solid rgba(232, 184, 0, 0.22)',
         backdropFilter: 'blur(16px)',
       }}
     >
@@ -24,12 +24,12 @@ export function Tabs<T extends string>({ options, value, onChange }: Props<T>) {
             style={
               active
                 ? {
-                    background: 'linear-gradient(135deg, #FF7A3D 0%, #F05A1A 50%, #C44A14 100%)',
-                    color: '#061B4A',
+                    background: 'linear-gradient(135deg, #FFD633 0%, #E8B800 50%, #A88600 100%)',
+                    color: '#0F0A06',
                     fontWeight: 700,
-                    boxShadow: '0 0 14px rgba(240, 90, 26, 0.55)',
+                    boxShadow: '0 0 14px rgba(232, 184, 0, 0.55)',
                   }
-                : { color: '#8B6E50', fontWeight: 500 }
+                : { color: '#8A7A60', fontWeight: 500 }
             }
           >
             {opt.label}

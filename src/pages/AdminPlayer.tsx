@@ -518,7 +518,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
               Iniciar reproductor
             </NeonButton>
             <div className="flex justify-center gap-4 mt-6 text-[11px] uppercase tracking-widest font-heading text-ink-dim">
-              <Link to={`/admin/${venue.slug}`} className="hover:text-gold transition">← Panel admin</Link>
+              <Link to={`/admin/${venue.slug}`} className="hover:text-gold transition">← Administrador</Link>
               <span className="text-gold/30">·</span>
               <Link to="/" className="hover:text-gold transition">Inicio</Link>
             </div>

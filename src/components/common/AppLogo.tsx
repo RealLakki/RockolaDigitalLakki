@@ -1,16 +1,16 @@
 interface Props {
   size?: number;
   className?: string;
-  /** Si true, agrega un halo naranja suave detrás del logo (para heroes). */
+  /** Si true, agrega un halo ámbar suave detrás del logo (para heroes). */
   glow?: boolean;
 }
 
 /**
- * Logo principal de la app — disco/vinilo con nota musical.
+ * Logo principal — bafle/parlante visto de frente.
  * Renderizado inline en SVG, sin dependencias de assets externos.
- * Versión animada para spinners: `AnimatedLogo`.
  */
 export function AppLogo({ size = 64, className = '', glow = false }: Props) {
+  const id = `bafle-${size}`;
   return (
     <div
       className={['relative inline-block shrink-0', className].join(' ')}
@@ -21,7 +21,7 @@ export function AppLogo({ size = 64, className = '', glow = false }: Props) {
           className="absolute inset-0 rounded-full blur-2xl opacity-70 pointer-events-none"
           style={{
             background:
-              'radial-gradient(circle, rgba(240,90,26,0.65) 0%, rgba(255,122,61,0.25) 45%, rgba(192,74,20,0) 75%)',
+              'radial-gradient(circle, rgba(232,184,0,0.65) 0%, rgba(255,214,51,0.25) 45%, rgba(168,134,0,0) 75%)',
           }}
         />
       )}
@@ -33,42 +33,39 @@ export function AppLogo({ size = 64, className = '', glow = false }: Props) {
         className="relative w-full h-full"
       >
         <defs>
-          <linearGradient id={`app-logo-bg-${size}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#FF7A3D" />
-            <stop offset="100%" stopColor="#F05A1A" />
+          <radialGradient id={`cone-${id}`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FFD633" />
+            <stop offset="42%" stopColor="#E8B800" />
+            <stop offset="100%" stopColor="#2A1E06" />
+          </radialGradient>
+          <linearGradient id={`body-${id}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#281A0A" />
+            <stop offset="100%" stopColor="#1C1209" />
           </linearGradient>
         </defs>
 
-        {/* Disco/vinilo principal */}
-        <circle cx="32" cy="32" r="29" fill={`url(#app-logo-bg-${size})`} />
-        <circle
-          cx="32"
-          cy="32"
-          r="22"
-          fill="none"
-          stroke="#0A0A0F"
-          strokeWidth="1.4"
-          opacity="0.40"
-        />
-        <circle
-          cx="32"
-          cy="32"
-          r="14"
-          fill="none"
-          stroke="#0A0A0F"
-          strokeWidth="1.4"
-          opacity="0.40"
-        />
+        {/* Cuerpo del bafle */}
+        <circle cx="32" cy="32" r="30" fill={`url(#body-${id})`} />
+        {/* Borde exterior ámbar */}
+        <circle cx="32" cy="32" r="30" fill="none" stroke="#E8B800" strokeWidth="1.5" />
 
-        {/* Etiqueta central negra */}
-        <circle cx="32" cy="32" r="6" fill="#0A0A0F" />
-        <circle cx="32" cy="32" r="2" fill="#FF7A3D" />
+        {/* Anillo de surround */}
+        <circle cx="32" cy="32" r="25" fill="rgba(232,184,0,0.06)" stroke="#E8B800" strokeWidth="1" opacity="0.45" />
 
-        {/* Nota musical superpuesta — sobresale del disco */}
-        <g transform="translate(36 16)" fill="#0A0A0F">
-          <rect x="0" y="0" width="2.5" height="16" rx="1" />
-          <ellipse cx="-2" cy="16" rx="4.5" ry="3.5" />
-        </g>
+        {/* Cono del parlante (gradiente radial: ámbar brillante al centro, oscuro al borde) */}
+        <circle cx="32" cy="32" r="20" fill={`url(#cone-${id})`} />
+
+        {/* Anillo de voz (voice coil) */}
+        <circle cx="32" cy="32" r="13" fill="none" stroke="#E8B800" strokeWidth="1.2" opacity="0.50" />
+
+        {/* Dust cap oscuro */}
+        <circle cx="32" cy="32" r="7.5" fill="#1C1209" />
+
+        {/* Centro ámbar */}
+        <circle cx="32" cy="32" r="4.5" fill="#E8B800" />
+
+        {/* Agujero central */}
+        <circle cx="32" cy="32" r="2" fill="#1C1209" />
       </svg>
     </div>
   );

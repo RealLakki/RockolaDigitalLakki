@@ -9,53 +9,62 @@
 
   body {
     @apply bg-base text-ink font-sans antialiased;
-    /* Naranja cálido en la parte superior, azul marino profundo como base,
-       petróleo sutil en las esquinas — sensación de bar iluminado de noche */
+    /* Ámbar cálido en la parte superior, negro cálido profundo como base —
+       sensación de bar oscuro con reflectores */
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(240,90,26,0.18), transparent 65%),
-      radial-gradient(ellipse 55% 45% at 100% 0%, rgba(45,124,163,0.14), transparent 60%),
-      radial-gradient(ellipse 50% 40% at 0% 100%, rgba(10,44,103,0.50), transparent 70%);
+      radial-gradient(ellipse 80% 45% at 50% -8%, rgba(232,184,0,0.14), transparent 60%),
+      radial-gradient(ellipse 50% 35% at 95% 5%, rgba(232,184,0,0.07), transparent 55%),
+      radial-gradient(ellipse 45% 35% at 5% 95%, rgba(15,10,6,0.90), transparent 65%);
     background-attachment: fixed;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Scrollbar naranja vintage */
+  /* Scrollbar ámbar cálido */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(240, 90, 26, 0.35);
+    background: rgba(232, 184, 0, 0.35);
     border-radius: 3px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(240, 90, 26, 0.60); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(232, 184, 0, 0.60); }
 
-  ::selection { background: rgba(240, 90, 26, 0.30); color: #EED9B8; }
+  ::selection { background: rgba(232, 184, 0, 0.30); color: #F2E8D0; }
 }
 
 @layer components {
   .glass {
-    background-color: rgba(10, 44, 103, 0.55);
+    background-color: rgba(28, 18, 9, 0.72);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(45, 124, 163, 0.22);
+    border: 1px solid rgba(232, 184, 0, 0.15);
   }
   .glass-elevated {
-    background-color: rgba(10, 44, 103, 0.82);
+    background-color: rgba(28, 18, 9, 0.92);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(45, 124, 163, 0.38);
+    border: 1px solid rgba(232, 184, 0, 0.28);
   }
   .gold-text {
-    color: #F05A1A;
-    text-shadow: 0 0 10px rgba(240,90,26,0.60), 0 0 22px rgba(240,90,26,0.30);
+    color: #E8B800;
+    text-shadow: 0 0 10px rgba(232,184,0,0.60), 0 0 22px rgba(232,184,0,0.30);
   }
   .gold-border {
-    border: 1px solid rgba(240, 90, 26, 0.50);
-    box-shadow: 0 0 14px rgba(240,90,26,0.28), inset 0 0 10px rgba(240,90,26,0.08);
+    border: 1px solid rgba(232, 184, 0, 0.50);
+    box-shadow: 0 0 14px rgba(232,184,0,0.28), inset 0 0 10px rgba(232,184,0,0.08);
   }
   .grid-bg {
     background-image:
-      linear-gradient(rgba(45,124,163,0.07) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(45,124,163,0.07) 1px, transparent 1px);
+      linear-gradient(rgba(232,184,0,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,184,0,0.05) 1px, transparent 1px);
     background-size: 40px 40px;
+  }
+  /* Neon card hover effect */
+  .card-neon {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+  }
+  .card-neon:hover {
+    box-shadow: 0 0 20px rgba(232,184,0,0.30), 0 0 40px rgba(232,184,0,0.12);
+    border-color: rgba(232,184,0,0.55) !important;
+    transform: translateY(-2px);
   }
 }

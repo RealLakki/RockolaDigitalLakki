@@ -1,145 +1,331 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import anime from 'animejs';
+import gsap from 'gsap';
 import { AppLogo } from '../components/common/AppLogo';
 import { NeonButton } from '../components/common/NeonButton';
 
-export function Landing() {
-  const logoRef = useRef<HTMLDivElement>(null);
-  const badgeRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const subRef = useRef<HTMLParagraphElement>(null);
-  const ctasRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
-
+/* ─── Scroll progress bar ─── */
+function ScrollProgressBar() {
+  const [pct, setPct] = useState(0);
   useEffect(() => {
-    const tl = anime.timeline({ easing: 'cubicBezier(0.16, 1, 0.3, 1)' });
-    tl.add({ targets: logoRef.current, scale: [0.85, 1], opacity: [0, 1], duration: 900, easing: 'easeOutBack' })
-      .add({ targets: badgeRef.current, opacity: [0, 1], translateY: [10, 0], duration: 500 }, '-=400')
-      .add({ targets: titleRef.current, translateY: [40, 0], opacity: [0, 1], duration: 900 }, '-=300')
-      .add({ targets: subRef.current, translateY: [20, 0], opacity: [0, 1], duration: 700 }, '-=600')
-      .add({ targets: ctasRef.current, translateY: [20, 0], opacity: [0, 1], duration: 700 }, '-=500')
-      .add({ targets: featuresRef.current?.children ?? [], translateY: [16, 0], opacity: [0, 1], duration: 600, delay: anime.stagger(80) }, '-=400');
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setPct(max > 0 ? (window.scrollY / max) * 100 : 0);
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
   }, []);
-
   return (
-    <div className="min-h-screen grid-bg relative overflow-hidden">
-      {/* Glow ornamentales en las esquinas */}
+    <div className="fixed top-0 left-0 right-0 z-[9998] h-[3px] bg-transparent">
       <div
-        className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(240,90,26,0.25) 0%, transparent 70%)' }}
+        className="h-full transition-none"
+        style={{
+          width: `${pct}%`,
+          background: 'linear-gradient(90deg, #E8B800 0%, #FFD633 100%)',
+          boxShadow: '0 0 8px rgba(232,184,0,0.80)',
+        }}
       />
-      <div
-        className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(240,90,26,0.14) 0%, transparent 70%)' }}
-      />
-
-      <div className="min-h-screen bg-gradient-radial flex flex-col relative">
-        <nav className="px-6 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AppLogo size={42} />
-            <span className="font-heading text-ink text-lg tracking-[0.18em] uppercase hidden sm:inline">Jukebox</span>
-          </div>
-          <Link
-            to="/admin/demo"
-            className="text-ink-mute hover:text-gold transition text-sm font-heading tracking-wide uppercase"
-          >
-            Soy un local →
-          </Link>
-        </nav>
-
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-          <div className="w-full max-w-3xl text-center flex flex-col items-center">
-            {/* Logo */}
-            <div ref={logoRef} className="mb-6">
-              <AppLogo size={220} glow />
-            </div>
-
-            {/* Badge superior con líneas decorativas */}
-            <div ref={badgeRef} className="flex items-center gap-3 mb-6">
-              <span
-                className="block h-px w-10 sm:w-16"
-                style={{ background: 'linear-gradient(to right, transparent, #F05A1A)' }}
-              />
-              <span className="text-gold font-heading uppercase tracking-[0.28em] text-[11px] whitespace-nowrap">
-                Rocola digital · Tu mesa, tu música
-              </span>
-              <span
-                className="block h-px w-10 sm:w-16"
-                style={{ background: 'linear-gradient(to left, transparent, #F05A1A)' }}
-              />
-            </div>
-
-            {/* Título */}
-            <h1
-              ref={titleRef}
-              className="text-5xl md:text-7xl font-display italic font-bold text-ink leading-[1.05]"
-            >
-              La música la pones <span className="gold-text not-italic">tú</span>.
-            </h1>
-
-            {/* Subtítulo */}
-            <p
-              ref={subRef}
-              className="mt-6 text-lg md:text-xl text-ink-mute max-w-xl leading-relaxed"
-            >
-              Escanea el QR de tu mesa, busca lo que quieras escuchar y agrégalo
-              a la cola del local. Sin instalar nada, sin esperas, sin que el DJ te ignore.
-            </p>
-
-            {/* CTAs centrados */}
-            <div ref={ctasRef} className="mt-10 flex gap-3 justify-center flex-wrap w-full">
-              <Link to="/v/demo">
-                <NeonButton variant="primary" size="lg">🎵 Probar la demo</NeonButton>
-              </Link>
-              <Link to="/admin/demo">
-                <NeonButton variant="ghost" size="lg">Panel del local</NeonButton>
-              </Link>
-            </div>
-
-            {/* Divider ornamental con diamond */}
-            <div className="flex items-center gap-3 mt-16 w-full max-w-md">
-              <span className="flex-1 h-px bg-gold/20" />
-              <span className="text-gold/60 text-lg">◆</span>
-              <span className="flex-1 h-px bg-gold/20" />
-            </div>
-
-            {/* Features grid */}
-            <div ref={featuresRef} className="mt-12 grid sm:grid-cols-3 gap-4 w-full">
-              <Feature icon="📲" title="Escanea el QR" body="Sin app. Solo cámara y a pedir." />
-              <Feature icon="🎶" title="Tu música" body="La cola la arma la gente, no el algoritmo." />
-              <Feature icon="⚡" title="Pasa al frente" body="Propina al mesero y tu canción suena ya." />
-            </div>
-          </div>
-        </main>
-
-        <footer className="px-6 py-6 border-t" style={{ borderColor: 'rgba(240,90,26,0.20)' }}>
-          <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-ink-dim text-xs uppercase tracking-[0.2em] font-heading">
-              <span className="text-gold/60">◆</span>
-              <span>Jukebox · Rocola digital para bares y restaurantes</span>
-              <span className="text-gold/60">◆</span>
-            </div>
-          </div>
-        </footer>
-      </div>
     </div>
   );
 }
 
-function Feature({ icon, title, body }: { icon: string; title: string; body: string }) {
+/* ─── CountUp hook ─── */
+function useCountUp(target: number, inView: boolean, duration = 1400) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let frame = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+      else setCount(target);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [target, inView, duration]);
+  return count;
+}
+
+/* ─── IntersectionObserver hook ─── */
+function useInView(ref: React.RefObject<Element | null>, threshold = 0.3) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setInView(true); obs.disconnect(); }
+    }, { threshold });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [ref, threshold]);
+  return inView;
+}
+
+/* ─── Stat card con countUp ─── */
+function StatCard({ value, suffix, label, inView }: {
+  value: number; suffix: string; label: string; inView: boolean;
+}) {
+  const count = useCountUp(value, inView);
+  return (
+    <div className="flex flex-col items-center py-6 px-4">
+      <span className="font-display italic font-bold text-4xl sm:text-5xl gold-text">
+        {count}{suffix}
+      </span>
+      <span className="mt-1 text-ink-mute font-heading uppercase tracking-widest text-xs text-center">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/* ─── Feature card con neon hover ─── */
+function FeatureCard({ step, icon, title, body }: {
+  step: string; icon: string; title: string; body: string;
+}) {
   return (
     <div
-      className="rounded-xl p-4 text-left transition-all hover:-translate-y-0.5"
+      className="card-neon rounded-2xl p-5 sm:p-6 text-left"
       style={{
-        background: 'rgba(19, 19, 28, 0.65)',
-        border: '1px solid rgba(0, 212, 255, 0.22)',
-        backdropFilter: 'blur(12px)',
+        background: 'rgba(28,18,9,0.80)',
+        border: '1px solid rgba(232,184,0,0.18)',
       }}
     >
-      <div className="text-2xl mb-2">{icon}</div>
-      <h3 className="font-heading uppercase tracking-wide text-sm text-gold mb-1">{title}</h3>
+      <div className="flex items-center gap-3 mb-4">
+        <span
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-heading font-bold shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, #FFD633 0%, #E8B800 100%)',
+            color: '#0F0A06',
+          }}
+        >
+          {step}
+        </span>
+        <span className="text-2xl">{icon}</span>
+      </div>
+      <h3 className="font-heading uppercase tracking-wide text-sm sm:text-base text-gold mb-2">{title}</h3>
       <p className="text-ink-mute text-sm leading-relaxed">{body}</p>
+    </div>
+  );
+}
+
+/* ─── Main Landing ─── */
+export function Landing() {
+  const [scrolled, setScrolled] = useState(false);
+  const statsRef  = useRef<HTMLDivElement>(null);
+  const statsInView = useInView(statsRef as React.RefObject<Element>, 0.3);
+
+  const badgeRef    = useRef<HTMLDivElement>(null);
+  const titleRef    = useRef<HTMLHeadingElement>(null);
+  const subRef      = useRef<HTMLParagraphElement>(null);
+  const ctasRef     = useRef<HTMLDivElement>(null);
+  const logoRef     = useRef<HTMLDivElement>(null);
+  const cardsRef    = useRef<HTMLDivElement>(null);
+
+  // Navbar scroll behaviour
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Hero GSAP: fade + slide desde abajo
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        [logoRef.current, badgeRef.current, titleRef.current, subRef.current, ctasRef.current],
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, stagger: 0.13, ease: 'power3.out', delay: 0.15 }
+      );
+      if (cardsRef.current) {
+        gsap.fromTo(
+          Array.from(cardsRef.current.children),
+          { y: 24, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, stagger: 0.10, ease: 'power2.out', delay: 0.5 }
+        );
+      }
+    });
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div className="min-h-screen relative overflow-x-hidden">
+      <ScrollProgressBar />
+
+      {/* Grid pattern de fondo */}
+      <div className="fixed inset-0 grid-bg pointer-events-none opacity-60" />
+
+      {/* Glow ornamenta corner */}
+      <div
+        className="fixed -top-40 -left-40 w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(232,184,0,0.18) 0%, transparent 70%)' }}
+      />
+      <div
+        className="fixed -bottom-40 -right-40 w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(232,184,0,0.10) 0%, transparent 70%)' }}
+      />
+
+      {/* ── NAVBAR ── */}
+      <nav
+        className="fixed top-[3px] left-0 right-0 z-50 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-all duration-300"
+        style={{
+          background: scrolled
+            ? 'rgba(15,10,6,0.92)'
+            : 'transparent',
+          backdropFilter: scrolled ? 'blur(16px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(232,184,0,0.15)' : '1px solid transparent',
+        }}
+      >
+        <div className="flex items-center gap-2 sm:gap-3">
+          <AppLogo size={36} />
+          <span className="font-heading text-ink text-base sm:text-lg tracking-[0.18em] uppercase">
+            El Bafle
+          </span>
+        </div>
+        <Link
+          to="/admin/demo"
+          className="text-ink-mute hover:text-gold transition-colors text-xs sm:text-sm font-heading tracking-wide uppercase"
+        >
+          Soy del local →
+        </Link>
+      </nav>
+
+      {/* ── HERO ── */}
+      <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-20 pb-12 text-center">
+        {/* Logo grande */}
+        <div ref={logoRef} className="mb-6 sm:mb-8">
+          <AppLogo size={160} glow />
+        </div>
+
+        {/* Badge */}
+        <div ref={badgeRef} className="flex items-center gap-3 mb-5 sm:mb-6">
+          <span
+            className="block h-px w-8 sm:w-14"
+            style={{ background: 'linear-gradient(to right, transparent, #E8B800)' }}
+          />
+          <span className="text-gold font-heading uppercase tracking-[0.24em] text-[10px] sm:text-[11px] whitespace-nowrap">
+            Rockola digital · Costa colombiana
+          </span>
+          <span
+            className="block h-px w-8 sm:w-14"
+            style={{ background: 'linear-gradient(to left, transparent, #E8B800)' }}
+          />
+        </div>
+
+        {/* Título principal */}
+        <h1
+          ref={titleRef}
+          className="text-4xl sm:text-6xl md:text-7xl font-display italic font-bold text-ink leading-[1.05] max-w-3xl"
+        >
+          La música la pones{' '}
+          <span className="gold-text not-italic">tú</span>.
+        </h1>
+
+        {/* Subtítulo */}
+        <p
+          ref={subRef}
+          className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-ink-mute max-w-lg sm:max-w-xl leading-relaxed"
+        >
+          Escanea el QR de tu mesa, elige lo que quieres escuchar y agrégalo
+          a la cola del bafle. Sin apps, sin cuentas, sin que te ignoren.
+        </p>
+
+        {/* CTAs */}
+        <div
+          ref={ctasRef}
+          className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 items-center justify-center w-full max-w-sm sm:max-w-none"
+        >
+          <Link to="/v/demo" className="w-full sm:w-auto">
+            <NeonButton variant="primary" size="lg" className="w-full sm:w-auto">
+              🔊 Ver demo
+            </NeonButton>
+          </Link>
+          <Link to="/admin/demo" className="w-full sm:w-auto">
+            <NeonButton variant="ghost" size="lg" className="w-full sm:w-auto">
+              Panel del local
+            </NeonButton>
+          </Link>
+        </div>
+      </section>
+
+      {/* ── STATS ── */}
+      <section
+        ref={statsRef}
+        className="px-4 sm:px-6 py-8 sm:py-12"
+      >
+        <div
+          className="max-w-2xl mx-auto rounded-2xl"
+          style={{
+            background: 'rgba(28,18,9,0.70)',
+            border: '1px solid rgba(232,184,0,0.20)',
+          }}
+        >
+          <div className="grid grid-cols-3 divide-x divide-gold/10">
+            <StatCard value={0}   suffix=""   label="Apps necesarias"     inView={statsInView} />
+            <StatCard value={10}  suffix="K+" label="Canciones pedidas"   inView={statsInView} />
+            <StatCard value={100} suffix="%"  label="Lo elige la gente"   inView={statsInView} />
+          </div>
+        </div>
+      </section>
+
+      {/* ── CÓMO FUNCIONA ── */}
+      <section className="px-4 sm:px-6 py-10 sm:py-16">
+        <div className="max-w-3xl mx-auto">
+          {/* Divider ornamental */}
+          <div className="flex items-center gap-3 mb-8 sm:mb-12">
+            <span className="flex-1 h-px bg-gold/15" />
+            <span className="text-gold/50 text-lg">◆</span>
+            <span className="font-heading uppercase tracking-[0.22em] text-gold text-[11px]">
+              Así funciona
+            </span>
+            <span className="text-gold/50 text-lg">◆</span>
+            <span className="flex-1 h-px bg-gold/15" />
+          </div>
+
+          <div ref={cardsRef} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <FeatureCard
+              step="01"
+              icon="📱"
+              title="Escanea el QR"
+              body="Sin instalar nada. Solo apunta la cámara al código de tu mesa y ya entras."
+            />
+            <FeatureCard
+              step="02"
+              icon="🎵"
+              title="Elige tu canción"
+              body="Busca el tema, el artista o el álbum. Lo que quieras escuchar, lo encuentras."
+            />
+            <FeatureCard
+              step="03"
+              icon="🔊"
+              title="¡Al bafle!"
+              body="Toca el botón y tu canción entra a la cola. Espera tu turno y a gozar."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer
+        className="px-4 sm:px-6 py-6 sm:py-8 mt-4"
+        style={{ borderTop: '1px solid rgba(232,184,0,0.15)' }}
+      >
+        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <AppLogo size={28} />
+            <span className="text-ink-dim text-xs uppercase tracking-[0.20em] font-heading">
+              El Bafle · Rockola digital
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-ink-dim text-[10px] uppercase tracking-widest font-heading">
+            <span className="text-gold/50">◆</span>
+            <span>Hecho pa' la costa</span>
+            <span className="text-gold/50">◆</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

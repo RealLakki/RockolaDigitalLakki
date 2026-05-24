@@ -1,4 +1,4 @@
-﻿import { useRef, type ButtonHTMLAttributes, type MouseEvent, forwardRef } from 'react';
+import { useRef, type ButtonHTMLAttributes, type MouseEvent, forwardRef } from 'react';
 import anime from 'animejs';
 
 type Variant = 'primary' | 'ghost' | 'danger' | 'success';
@@ -11,16 +11,13 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
 }
 
-// Para el primary usamos arbitrary value del background — garantiza que el
-// gradient se renderice aunque Tailwind no genere bg-gradient-gold por
-// alguna razón de detección.
-const PRIMARY_BG = 'bg-[linear-gradient(135deg,#FF7A3D_0%,#F05A1A_55%,#C44A14_100%)]';
+const PRIMARY_BG = 'bg-[linear-gradient(135deg,#FFD633_0%,#E8B800_55%,#A88600_100%)]';
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    `${PRIMARY_BG} text-[#061B4A] font-bold border border-[#FF7A3D] shadow-gold hover:shadow-gold-lg hover:brightness-110 active:scale-[0.97]`,
+    `${PRIMARY_BG} text-[#0F0A06] font-bold border border-[#E8B800] shadow-gold hover:shadow-gold-lg hover:brightness-110 active:scale-[0.97]`,
   ghost:
-    'bg-[rgba(10,44,103,0.60)] text-ink border border-[rgba(45,124,163,0.35)] hover:border-gold hover:text-gold hover:shadow-gold-sm active:scale-[0.97]',
+    'bg-[rgba(28,18,9,0.60)] text-ink border border-[rgba(58,42,24,0.55)] hover:border-gold hover:text-gold hover:shadow-gold-sm active:scale-[0.97]',
   danger:
     'bg-[rgba(182,40,40,0.12)] text-danger border border-[rgba(182,40,40,0.45)] hover:bg-[rgba(182,40,40,0.22)] hover:shadow-[0_0_15px_rgba(182,40,40,0.50)] active:scale-[0.97]',
   success:
@@ -46,16 +43,15 @@ export const NeonButton = forwardRef<HTMLButtonElement, Props>(function NeonButt
 
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     if (disabled || loading) return;
-    // Ripple desde el punto de click
     if (localRef.current) {
       const rect = localRef.current.getBoundingClientRect();
       const ripple = document.createElement('span');
-      const size = Math.max(rect.width, rect.height) * 1.6;
+      const sz = Math.max(rect.width, rect.height) * 1.6;
       ripple.style.cssText = `
-        position: absolute; left: ${e.clientX - rect.left - size / 2}px;
-        top: ${e.clientY - rect.top - size / 2}px;
-        width: ${size}px; height: ${size}px; border-radius: 9999px;
-        background: radial-gradient(circle, rgba(255,122,61,0.55) 0%, rgba(240,90,26,0) 70%);
+        position: absolute; left: ${e.clientX - rect.left - sz / 2}px;
+        top: ${e.clientY - rect.top - sz / 2}px;
+        width: ${sz}px; height: ${sz}px; border-radius: 9999px;
+        background: radial-gradient(circle, rgba(255,214,51,0.55) 0%, rgba(232,184,0,0) 70%);
         pointer-events: none; transform: scale(0); opacity: 0.9;
       `;
       localRef.current.appendChild(ripple);
