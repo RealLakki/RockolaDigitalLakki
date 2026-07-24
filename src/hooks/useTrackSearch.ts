@@ -39,6 +39,7 @@ export function useTrackSearch(
         limit: useLastfm ? 30 : FINAL_LIMIT,
         allowExplicit,
         allowedGenres: useLastfm ? [] : allowed,
+        market: 'CO', // catálogo/labels de música popular colombiana
       })
         .then(async (rawResults) => {
           if (reqIdRef.current !== myId) return;

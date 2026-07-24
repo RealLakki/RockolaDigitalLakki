@@ -29,43 +29,92 @@ interface LastfmArtistInfo {
   };
 }
 
-/** Cache en memoria por sesión. Key normalizada para evitar dupes. */
+/** Cache en memoria por sesión. Key normalizada para evitar dupes.
+ * IMPORTANTE: SOLO se cachean respuestas reales (200 de Last.fm, aunque sean
+ * vacías). Los errores/rate-limits NUNCA se cachean — antes se guardaba `[]`
+ * ante cualquier fallo, lo que "envenenaba" la caché toda la sesión y hacía
+ * que el filtro degradara de forma permanente (causa raíz del "a veces sí,
+ * a veces no"). */
 const trackCache = new Map<string, string[]>();
 const artistCache = new Map<string, string[]>();
 
 const cacheKey = (artist: string, title: string) =>
   `${artist.toLowerCase().trim()}::${title.toLowerCase().trim()}`;
 
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** Resultado de una llamada a Last.fm: `ok` distingue "respuesta real" (aunque
+ * `tags` venga vacío) de "error/rate-limit" (para no cachear ni tratar como
+ * 'sin tags'). */
+interface TagFetch {
+  ok: boolean;
+  tags: string[];
+}
+
+/**
+ * fetch con reintento ante 429 (rate-limit) y 5xx, con backoff exponencial.
+ * Last.fm free comparte un límite bajo (~5 req/s por key) entre todos los
+ * usuarios del proxy, así que en ráfagas es normal ver 429. Devuelve la
+ * Response final, o null si la red falló en todos los intentos.
+ */
+async function fetchWithRetry(url: string, tries = 3): Promise<Response | null> {
+  let delay = 350;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url);
+      // 429 / 5xx → reintentar (salvo que sea el último intento)
+      if ((res.status === 429 || res.status >= 500) && i < tries - 1) {
+        await sleep(delay);
+        delay *= 2;
+        continue;
+      }
+      return res;
+    } catch {
+      // Error de red — reintentar
+      if (i === tries - 1) return null;
+      await sleep(delay);
+      delay *= 2;
+    }
+  }
+  return null;
+}
+
 /**
  * Devuelve los tags más populares de un track. Si Last.fm no encuentra el
  * track exacto (común para releases nuevos o muy nicho), hace fallback a los
  * tags del artista.
+ *
+ * El veredicto es DETERMINISTA: solo cachea respuestas reales, y ante un error
+ * transitorio devuelve `[]` para esta llamada SIN cachearlo, de modo que el
+ * siguiente intento reintente en vez de quedar "pegado" en vacío.
  */
 export async function getTrackTags(artist: string, title: string): Promise<string[]> {
   const ck = cacheKey(artist, title);
   const cached = trackCache.get(ck);
   if (cached) return cached;
 
-  try {
-    // Intento 1: track exacto
-    const trackTags = await fetchTrackTags(artist, title);
-    if (trackTags.length > 0) {
-      trackCache.set(ck, trackTags);
-      return trackTags;
-    }
-
-    // Intento 2: tags del artista (fallback)
-    const artistTags = await fetchArtistTags(artist);
-    trackCache.set(ck, artistTags);
-    return artistTags;
-  } catch (e) {
-    console.warn('[lastfm] error for', artist, title, e);
-    trackCache.set(ck, []);
-    return [];
+  // Intento 1: track exacto
+  const track = await fetchTrackTags(artist, title);
+  if (track.ok && track.tags.length > 0) {
+    trackCache.set(ck, track.tags);
+    return track.tags;
   }
+
+  // Intento 2: tags del artista (fallback)
+  const artistRes = await fetchArtistTags(artist);
+  if (artistRes.ok) {
+    // Respuesta real (aunque sea []) → la cacheamos como el veredicto del track.
+    trackCache.set(ck, artistRes.tags);
+    return artistRes.tags;
+  }
+
+  // Ambas llamadas fallaron (error/red/rate-limit tras reintentos). NO cachear:
+  // que el próximo intento lo reintente. Devolvemos [] solo para esta llamada.
+  console.warn('[lastfm] sin datos (error transitorio) para', artist, '-', title);
+  return [];
 }
 
-async function fetchTrackTags(artist: string, title: string): Promise<string[]> {
+async function fetchTrackTags(artist: string, title: string): Promise<TagFetch> {
   const params = new URLSearchParams({
     method: 'track.getInfo',
     artist,
@@ -73,17 +122,17 @@ async function fetchTrackTags(artist: string, title: string): Promise<string[]> 
     format: 'json',
     autocorrect: '1',
   });
-  const res = await fetch(`/api/lastfm-track?${params}`);
-  if (!res.ok) return [];
-  const data = (await res.json()) as LastfmTrackInfo;
+  const res = await fetchWithRetry(`/api/lastfm-track?${params}`);
+  if (!res || !res.ok) return { ok: false, tags: [] };
+  const data = (await res.json().catch(() => ({}))) as LastfmTrackInfo;
   const tags = data.track?.toptags?.tag ?? [];
-  return tags.map((t) => t.name.toLowerCase()).filter((t) => t && t.length > 1);
+  return { ok: true, tags: tags.map((t) => t.name.toLowerCase()).filter((t) => t && t.length > 1) };
 }
 
-async function fetchArtistTags(artist: string): Promise<string[]> {
+async function fetchArtistTags(artist: string): Promise<TagFetch> {
   const ak = artist.toLowerCase().trim();
   const cached = artistCache.get(ak);
-  if (cached) return cached;
+  if (cached) return { ok: true, tags: cached };
 
   const params = new URLSearchParams({
     method: 'artist.getInfo',
@@ -91,16 +140,13 @@ async function fetchArtistTags(artist: string): Promise<string[]> {
     format: 'json',
     autocorrect: '1',
   });
-  const res = await fetch(`/api/lastfm-artist?${params}`);
-  if (!res.ok) {
-    artistCache.set(ak, []);
-    return [];
-  }
-  const data = (await res.json()) as LastfmArtistInfo;
+  const res = await fetchWithRetry(`/api/lastfm-artist?${params}`);
+  if (!res || !res.ok) return { ok: false, tags: [] };
+  const data = (await res.json().catch(() => ({}))) as LastfmArtistInfo;
   const tags = data.artist?.tags?.tag ?? [];
   const result = tags.map((t) => t.name.toLowerCase()).filter((t) => t && t.length > 1);
-  artistCache.set(ak, result);
-  return result;
+  artistCache.set(ak, result); // solo cacheamos respuestas reales
+  return { ok: true, tags: result };
 }
 
 /**

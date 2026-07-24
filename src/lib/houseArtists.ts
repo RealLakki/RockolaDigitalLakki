@@ -2,21 +2,16 @@ import { itunesSearch, itunesSearchArtists } from './itunes';
 import type { TrackSearchResult } from './types';
 
 /**
- * Artistas sugeridos del local — set genérico de mainstream global.
- * Sirve tanto para la card "Top picks" del cliente como para el auto-filler
- * del reproductor cuando la cola se queda vacía.
- *
- * Estos artistas son neutrales (no apuntan a ningún género regional)
- * y pegan bien en bares/restaurantes de cualquier ciudad. Cada local
- * puede sobreescribir esta lista en el futuro si lo desea.
+ * Lista de artistas favoritos del bar — "Las de siempre".
+ * Compartida entre la card del cliente y el auto-filler del reproductor.
  */
 export const HOUSE_ARTISTS = [
-  { name: 'Bad Bunny',    searchTerm: 'Bad Bunny' },
-  { name: 'Taylor Swift', searchTerm: 'Taylor Swift' },
-  { name: 'Karol G',      searchTerm: 'Karol G' },
-  { name: 'The Weeknd',   searchTerm: 'The Weeknd' },
-  { name: 'Dua Lipa',     searchTerm: 'Dua Lipa' },
-  { name: 'Drake',        searchTerm: 'Drake' },
+  { name: 'Charrito Negro', searchTerm: 'Charrito Negro' },
+  { name: 'Luis Alberto Posada', searchTerm: 'Luis Alberto Posada' },
+  { name: 'Yeison Jiménez', searchTerm: 'Yeison Jimenez' },
+  { name: 'Andariego', searchTerm: 'Andariego' },
+  { name: 'Paola Jara', searchTerm: 'Paola Jara' },
+  { name: 'Jessi Uribe', searchTerm: 'Jessi Uribe' },
 ];
 
 /**
@@ -39,7 +34,7 @@ export async function getRandomHouseTrack(
 
   for (const artist of shuffled) {
     try {
-      const tracks = await itunesSearch(artist.searchTerm, { limit: 12 });
+      const tracks = await itunesSearch(artist.searchTerm, { limit: 12, market: 'CO' });
       // Filtrar al artista correcto (search puede traer features)
       const own = tracks.filter((t) =>
         t.artists.some((a) =>
@@ -59,10 +54,10 @@ export async function getRandomHouseTrack(
   // Fallback final: si iTunes search falla en todos, intentar resolver via lookup directo
   for (const artist of shuffled) {
     try {
-      const artistResults = await itunesSearchArtists(artist.searchTerm, { limit: 1 });
+      const artistResults = await itunesSearchArtists(artist.searchTerm, { limit: 1, market: 'CO' });
       if (artistResults.length === 0) continue;
       // Buscar tracks de ese artistId
-      const tracks = await itunesSearch(artist.name, { limit: 5 });
+      const tracks = await itunesSearch(artist.name, { limit: 5, market: 'CO' });
       const candidates = tracks.filter((t) => !excludeProviderIds.has(t.providerId));
       if (candidates.length > 0) {
         return candidates[Math.floor(Math.random() * candidates.length)];
