@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import anime from 'animejs';
 import { useTopTracks } from '../../hooks/useTopTracks';
-import { topTrackToSearchResult, type TopTrackRow } from '../../lib/supabase';
+import { topTrackToSearchResult, type TopTrackRow } from '../../lib/api';
 import { joinArtists } from '../../utils/formatters';
 import { confirmAdd } from '../../utils/animations';
 import { GlowCard } from '../common/GlowCard';

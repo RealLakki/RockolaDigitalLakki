@@ -1,4 +1,4 @@
-import { boostItem, removeQueueItem, setItemStatus, unboostItem, updateVenue } from '../../lib/supabase';
+import { boostItem, removeQueueItem, setItemStatus, unboostItem, updateVenue } from '../../lib/api';
 import { useSendPlayerCommand } from '../../hooks/usePlayerControl';
 import { joinArtists } from '../../utils/formatters';
 import type { QueueItem, Venue } from '../../lib/types';
@@ -40,7 +40,7 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefre
             <p className="text-ink text-sm font-medium truncate">{nowPlaying.track.title}</p>
             <p className="text-ink-mute text-xs truncate">{joinArtists(nowPlaying.track.artists)}</p>
           </div>
-          {/* Control remoto del reproductor (cross-tab via Supabase broadcast) */}
+          {/* Control remoto del reproductor (cross-tab via socket.io) */}
           <div className="flex gap-1 shrink-0">
             <NeonButton
               size="sm"

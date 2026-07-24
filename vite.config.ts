@@ -8,9 +8,15 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3100',
         changeOrigin: true,
         secure: false,
+      },
+      // WebSocket de socket.io — proxy con ws para el realtime en dev
+      '/socket.io': {
+        target: 'http://localhost:3100',
+        changeOrigin: true,
+        ws: true,
       },
     },
   },

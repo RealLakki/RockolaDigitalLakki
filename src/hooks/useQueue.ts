@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchActiveQueue, supabase } from '../lib/supabase';
+import { fetchActiveQueue } from '../lib/api';
+import { onVenueEvent } from '../lib/realtime';
 import type { QueueItem } from '../lib/types';
 
 /**
- * Suscripción realtime a la cola. Memoizamos `queued` y `nowPlaying` para que
- * mantengan referencia estable entre renders mientras los items no cambien
- * (sin esto, los componentes hijos re-disparan animaciones en cada tick).
+ * Suscripción realtime a la cola (vía socket.io). Memoizamos `queued` y
+ * `nowPlaying` para que mantengan referencia estable entre renders mientras
+ * los items no cambien (evita re-disparar animaciones en cada tick).
  */
 export function useQueue(venueId: string | undefined) {
   const [items, setItems] = useState<QueueItem[]>([]);
@@ -21,16 +22,8 @@ export function useQueue(venueId: string | undefined) {
     setLoading(true);
     void refresh().finally(() => setLoading(false));
 
-    const ch = supabase
-      .channel(`queue:${venueId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'queue_items', filter: `venue_id=eq.${venueId}` },
-        () => { void refresh(); },
-      )
-      .subscribe();
-
-    return () => { void supabase.removeChannel(ch); };
+    const off = onVenueEvent(venueId, 'queue:changed', () => { void refresh(); });
+    return off;
   }, [venueId, refresh]);
 
   const nowPlaying = useMemo(

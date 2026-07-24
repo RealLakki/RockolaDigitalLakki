@@ -1,5 +1,5 @@
 ﻿import { ALL_GENRES, GENRE_LABEL, type Genre, type Venue } from '../../lib/types';
-import { updateVenue } from '../../lib/supabase';
+import { updateVenue } from '../../lib/api';
 import { GlowCard } from '../common/GlowCard';
 
 interface Props {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getVenueBySlug, supabase } from '../lib/supabase';
+import { getVenueBySlug } from '../lib/api';
+import { onVenueEvent } from '../lib/realtime';
 import type { Venue } from '../lib/types';
 
 export function useVenue(slug: string | undefined) {
@@ -24,15 +25,10 @@ export function useVenue(slug: string | undefined) {
   // Realtime: si admin cambia config (géneros, blocks), se refleja en clientes.
   useEffect(() => {
     if (!venue) return;
-    const ch = supabase
-      .channel(`venue:${venue.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'venues', filter: `id=eq.${venue.id}` },
-        () => { void getVenueBySlug(venue.slug).then((v) => v && setVenue(v)); },
-      )
-      .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    const off = onVenueEvent(venue.id, 'venue:changed', () => {
+      void getVenueBySlug(venue.slug).then((v) => v && setVenue(v));
+    });
+    return off;
   }, [venue]);
 
   return { venue, loading, error, setVenue };

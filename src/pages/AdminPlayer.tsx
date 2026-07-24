@@ -6,7 +6,7 @@ import { useYoutubePlayer } from '../hooks/useYoutubePlayer';
 import { useFullscreen } from '../hooks/useFullscreen';
 import { useReceivePlayerCommand } from '../hooks/usePlayerControl';
 import { useHouseFiller } from '../hooks/useHouseFiller';
-import { setItemStatus } from '../lib/supabase';
+import { setItemStatus } from '../lib/api';
 import { Visualizer } from '../components/player/Visualizer';
 import { NextUpStrip } from '../components/player/NextUpStrip';
 import { PlayerQrPanel } from '../components/player/PlayerQrPanel';
@@ -400,7 +400,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     showOverlay, activeSlot, refresh,
   ]);
 
-  // ─── Recibe comandos remotos del admin (cross-tab via Supabase Broadcast) ───
+  // ─── Recibe comandos remotos del admin (cross-tab via socket.io) ───
   useReceivePlayerCommand(venue.id, (cmd) => {
     if (showOverlay) return; // ignorar comandos antes de iniciar reproductor
     switch (cmd) {

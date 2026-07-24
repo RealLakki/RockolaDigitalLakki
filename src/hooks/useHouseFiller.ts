@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { getRandomHouseTrack } from '../lib/houseArtists';
 import { getTrackTags, isLastfmEnabled } from '../lib/lastfm';
 import { resolveOnYoutube } from '../lib/youtube';
-import { enqueueTrack } from '../lib/supabase';
+import { enqueueTrack } from '../lib/api';
 import { genreMatchedFor, type Genre, type QueueItem, type ResolvedTrack } from '../lib/types';
 
 interface Args {

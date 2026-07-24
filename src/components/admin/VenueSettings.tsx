@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react';
-import { updateVenue } from '../../lib/supabase';
+import { updateVenue } from '../../lib/api';
 import { GlowCard } from '../common/GlowCard';
 import { NeonButton } from '../common/NeonButton';
 import type { Venue } from '../../lib/types';

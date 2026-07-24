@@ -1,6 +1,6 @@
 import type { ResolvedTrack, TrackSearchResult } from './types';
 import { pickBestCandidate, type YoutubeCandidate } from '../utils/youtubeFilter';
-import { cacheYoutubeResolution, getCachedYoutubeResolution } from './supabase';
+import { cacheYoutubeResolution, getCachedYoutubeResolution } from './api';
 
 export const YT_PROVIDER_PREFIX = 'yt:';
 /** Igual que yt: pero indica que el video es solo audio (Topic auto-generado).

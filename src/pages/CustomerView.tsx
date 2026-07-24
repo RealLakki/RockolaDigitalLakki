@@ -20,7 +20,7 @@ import { AppLogo } from '../components/common/AppLogo';
 import { EmptyState } from '../components/common/EmptyState';
 import { NeonButton } from '../components/common/NeonButton';
 import { GuideTour, isTourDone, markTourDone } from '../components/customer/GuideTour';
-import { enqueueTrack } from '../lib/supabase';
+import { enqueueTrack } from '../lib/api';
 import { extractYoutubeVideoId, isYoutubeProvidedTrack, resolveOnYoutube, youtubeUrlToTrack, ytTrackToResolved } from '../lib/youtube';
 import { useYoutubeFallback } from '../hooks/useYoutubeFallback';
 import type { AlbumResult, ArtistResult } from '../lib/itunes';

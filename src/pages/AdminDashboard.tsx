@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useVenue } from '../hooks/useVenue';
 import { useQueue } from '../hooks/useQueue';
 import { QueueManager } from '../components/admin/QueueManager';
-import { enqueueTrack } from '../lib/supabase';
+import { enqueueTrack } from '../lib/api';
 import { isYoutubeProvidedTrack, resolveOnYoutube, ytTrackToResolved } from '../lib/youtube';
 import type { TrackSearchResult, Venue } from '../lib/types';
 import { GenreSettings } from '../components/admin/GenreSettings';
