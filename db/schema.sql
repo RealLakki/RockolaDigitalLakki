@@ -6,8 +6,7 @@
 --
 -- Uso:  psql -U rockola -d rockola -f db/schema.sql
 -- ============================================================================
-
-create extension if not exists pgcrypto;  -- gen_random_uuid()
+-- gen_random_uuid() es nativo en PostgreSQL 13+ (no requiere extensión).
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- venues: cada bar / discoteca
