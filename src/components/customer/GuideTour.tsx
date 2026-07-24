@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 
-const TOUR_DONE_KEY = 'bafle:tourDone';
+const TOUR_DONE_KEY = 'cantina:tourDone';
 
 const STEPS = [
   {
     emoji: '🔊',
-    title: '¡Bienvenido a El Bafle!',
+    title: '¡Bienvenido a La Cantina Plus!',
     body: 'La rockola digital del local. Aquí la música la pone la gente — no el DJ. ¡Tú mandas lo que suena!',
   },
   {
@@ -86,7 +86,7 @@ export function GuideTour({ show, onDone }: Props) {
       {/* Backdrop semitransparente — toca fuera para saltar */}
       <div
         className="fixed inset-0 z-[9990]"
-        style={{ background: 'rgba(15,10,6,0.50)' }}
+        style={{ background: 'rgba(15,13,10,0.50)' }}
         onClick={finish}
       />
 
@@ -98,9 +98,9 @@ export function GuideTour({ show, onDone }: Props) {
         <div
           className="max-w-xl mx-auto rounded-2xl p-4 sm:p-5"
           style={{
-            background: 'rgba(28,18,9,0.97)',
-            border: '1px solid rgba(232,184,0,0.40)',
-            boxShadow: '0 -8px 40px rgba(232,184,0,0.15), 0 0 0 1px rgba(232,184,0,0.08)',
+            background: 'rgba(28,23,18,0.97)',
+            border: '1px solid rgba(200,155,60,0.40)',
+            boxShadow: '0 -8px 40px rgba(200,155,60,0.15), 0 0 0 1px rgba(200,155,60,0.08)',
           }}
         >
           {/* Barra de progreso + botón saltar */}
@@ -113,10 +113,10 @@ export function GuideTour({ show, onDone }: Props) {
                   style={{
                     width: i === step ? 22 : 6,
                     background: i === step
-                      ? '#E8B800'
+                      ? '#C89B3C'
                       : i < step
-                      ? 'rgba(232,184,0,0.50)'
-                      : 'rgba(232,184,0,0.18)',
+                      ? 'rgba(200,155,60,0.50)'
+                      : 'rgba(200,155,60,0.18)',
                   }}
                 />
               ))}
@@ -137,7 +137,7 @@ export function GuideTour({ show, onDone }: Props) {
             <div className="text-4xl mb-3">{current.emoji}</div>
             <h2
               className="font-heading text-base sm:text-lg uppercase tracking-wide mb-2"
-              style={{ color: '#E8B800' }}
+              style={{ color: '#C89B3C' }}
             >
               {current.title}
             </h2>
@@ -151,9 +151,9 @@ export function GuideTour({ show, onDone }: Props) {
             onClick={next}
             className="mt-4 sm:mt-5 w-full py-3 rounded-xl font-heading uppercase tracking-wider text-sm font-bold transition-all active:scale-[0.98]"
             style={{
-              background: 'linear-gradient(135deg, #FFD633 0%, #E8B800 55%, #A88600 100%)',
-              color: '#0F0A06',
-              boxShadow: '0 0 18px rgba(232,184,0,0.35)',
+              background: 'linear-gradient(135deg, #F0C060 0%, #C89B3C 55%, #9A7728 100%)',
+              color: '#0F0D0A',
+              boxShadow: '0 0 18px rgba(200,155,60,0.35)',
             }}
           >
             {isLast ? '¡Listo, a pedir! 🔊' : 'Siguiente →'}

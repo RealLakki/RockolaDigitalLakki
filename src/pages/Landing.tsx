@@ -21,8 +21,8 @@ function ScrollProgressBar() {
         className="h-full transition-none"
         style={{
           width: `${pct}%`,
-          background: 'linear-gradient(90deg, #E8B800 0%, #FFD633 100%)',
-          boxShadow: '0 0 8px rgba(232,184,0,0.80)',
+          background: 'linear-gradient(90deg, #C89B3C 0%, #F0C060 100%)',
+          boxShadow: '0 0 8px rgba(200,155,60,0.80)',
         }}
       />
     </div>
@@ -89,16 +89,16 @@ function FeatureCard({ step, icon, title, body }: {
     <div
       className="card-neon rounded-2xl p-5 sm:p-6 text-left"
       style={{
-        background: 'rgba(28,18,9,0.80)',
-        border: '1px solid rgba(232,184,0,0.18)',
+        background: 'rgba(28,23,18,0.80)',
+        border: '1px solid rgba(200,155,60,0.18)',
       }}
     >
       <div className="flex items-center gap-3 mb-4">
         <span
           className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-heading font-bold shrink-0"
           style={{
-            background: 'linear-gradient(135deg, #FFD633 0%, #E8B800 100%)',
-            color: '#0F0A06',
+            background: 'linear-gradient(135deg, #F0C060 0%, #C89B3C 100%)',
+            color: '#0F0D0A',
           }}
         >
           {step}
@@ -160,11 +160,11 @@ export function Landing() {
       {/* Glow ornamenta corner */}
       <div
         className="fixed -top-40 -left-40 w-80 h-80 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(232,184,0,0.18) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(200,155,60,0.18) 0%, transparent 70%)' }}
       />
       <div
         className="fixed -bottom-40 -right-40 w-80 h-80 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(232,184,0,0.10) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(200,155,60,0.10) 0%, transparent 70%)' }}
       />
 
       {/* ── NAVBAR ── */}
@@ -172,20 +172,20 @@ export function Landing() {
         className="fixed top-[3px] left-0 right-0 z-50 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-all duration-300"
         style={{
           background: scrolled
-            ? 'rgba(15,10,6,0.92)'
+            ? 'rgba(15,13,10,0.92)'
             : 'transparent',
           backdropFilter: scrolled ? 'blur(16px)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(232,184,0,0.15)' : '1px solid transparent',
+          borderBottom: scrolled ? '1px solid rgba(200,155,60,0.15)' : '1px solid transparent',
         }}
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <AppLogo size={36} />
           <span className="font-heading text-ink text-base sm:text-lg tracking-[0.18em] uppercase">
-            El Bafle
+            La Cantina Plus
           </span>
         </div>
         <Link
-          to="/admin/demo"
+          to="/admin/la-cantina-plus"
           className="text-ink-mute hover:text-gold transition-colors text-xs sm:text-sm font-heading tracking-wide uppercase"
         >
           Soy del local →
@@ -203,14 +203,14 @@ export function Landing() {
         <div ref={badgeRef} className="flex items-center gap-3 mb-5 sm:mb-6">
           <span
             className="block h-px w-8 sm:w-14"
-            style={{ background: 'linear-gradient(to right, transparent, #E8B800)' }}
+            style={{ background: 'linear-gradient(to right, transparent, #C89B3C)' }}
           />
           <span className="text-gold font-heading uppercase tracking-[0.24em] text-[10px] sm:text-[11px] whitespace-nowrap">
-            Rockola digital · Costa colombiana
+            Cartagena · Despecho & Popular
           </span>
           <span
             className="block h-px w-8 sm:w-14"
-            style={{ background: 'linear-gradient(to left, transparent, #E8B800)' }}
+            style={{ background: 'linear-gradient(to left, transparent, #C89B3C)' }}
           />
         </div>
 
@@ -229,7 +229,7 @@ export function Landing() {
           className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-ink-mute max-w-lg sm:max-w-xl leading-relaxed"
         >
           Escanea el QR de tu mesa, elige lo que quieres escuchar y agrégalo
-          a la cola del bafle. Sin apps, sin cuentas, sin que te ignoren.
+          a la cola de la cantina. Sin apps, sin cuentas, sin que te ignoren.
         </p>
 
         {/* CTAs */}
@@ -237,12 +237,12 @@ export function Landing() {
           ref={ctasRef}
           className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 items-center justify-center w-full max-w-sm sm:max-w-none"
         >
-          <Link to="/v/demo" className="w-full sm:w-auto">
+          <Link to="/v/la-cantina-plus" className="w-full sm:w-auto">
             <NeonButton variant="primary" size="lg" className="w-full sm:w-auto">
               🔊 Ver demo
             </NeonButton>
           </Link>
-          <Link to="/admin/demo" className="w-full sm:w-auto">
+          <Link to="/admin/la-cantina-plus" className="w-full sm:w-auto">
             <NeonButton variant="ghost" size="lg" className="w-full sm:w-auto">
               Panel del local
             </NeonButton>
@@ -258,8 +258,8 @@ export function Landing() {
         <div
           className="max-w-2xl mx-auto rounded-2xl"
           style={{
-            background: 'rgba(28,18,9,0.70)',
-            border: '1px solid rgba(232,184,0,0.20)',
+            background: 'rgba(28,23,18,0.70)',
+            border: '1px solid rgba(200,155,60,0.20)',
           }}
         >
           <div className="grid grid-cols-3 divide-x divide-gold/10">
@@ -300,7 +300,7 @@ export function Landing() {
             <FeatureCard
               step="03"
               icon="🔊"
-              title="¡Al bafle!"
+              title="¡A la rockola!"
               body="Toca el botón y tu canción entra a la cola. Espera tu turno y a gozar."
             />
           </div>
@@ -310,13 +310,13 @@ export function Landing() {
       {/* ── FOOTER ── */}
       <footer
         className="px-4 sm:px-6 py-6 sm:py-8 mt-4"
-        style={{ borderTop: '1px solid rgba(232,184,0,0.15)' }}
+        style={{ borderTop: '1px solid rgba(200,155,60,0.15)' }}
       >
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <AppLogo size={28} />
             <span className="text-ink-dim text-xs uppercase tracking-[0.20em] font-heading">
-              El Bafle · Rockola digital
+              La Cantina Plus · Cartagena
             </span>
           </div>
           <div className="flex items-center gap-2 text-ink-dim text-[10px] uppercase tracking-widest font-heading">

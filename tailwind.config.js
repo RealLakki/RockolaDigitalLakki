@@ -14,38 +14,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta El Bafle — negro cálido profundo + ámbar eléctrico
+        // Paleta La Cantina Plus — negro cálido + dorado antiguo
         base: {
-          DEFAULT:  '#0F0A06',   // Negro cálido profundo (página)
-          elevated: '#1C1209',   // Superficie oscura cálida (cards)
-          card:     '#1C1209',
-          border:   '#3A2A18',   // Borde café cálido
+          DEFAULT:  '#0F0D0A',   // Negro Cantina (página)
+          elevated: '#1C1712',   // Oscuro cálido (cards, nav)
+          card:     '#1C1712',
+          border:   '#2C2418',   // Borde sutil
         },
-        // `gold` = ámbar eléctrico (CTA, glow, brand)
+        // `gold` = dorado antiguo (CTA, glow, brand)
         gold: {
-          DEFAULT: '#E8B800',    // Ámbar eléctrico principal
-          light:   '#FFD633',    // Hover / activo
-          dim:     '#A88600',    // Shade oscuro
-          deep:    '#4A3800',    // Gradient end
+          DEFAULT: '#C89B3C',    // Dorado principal
+          light:   '#F0C060',    // Hover / activo
+          dim:     '#9A7728',    // Shade oscuro
+          deep:    '#7A5C1A',    // Gradient end
         },
         ink: {
-          DEFAULT: '#F2E8D0',    // Crema cálida (texto principal)
-          mute:    '#D4C4A0',    // Beige papel (texto secundario)
-          dim:     '#8A7A60',    // Texto muy tenue
+          DEFAULT: '#F5F0E8',    // Crema texto
+          mute:    '#8A7A60',    // Barro muted
+          dim:     '#5C4F3C',    // Texto muy tenue
         },
-        // Verde eléctrico — acento EQ / secundario
+        // Verde eléctrico — acento EQ / secundario (heredado, EQ visual)
         teal: {
           DEFAULT: '#0ABD4A',
           light:   '#14E85A',
           dim:     '#077A30',
         },
         // Stub compat
-        peach: '#1C1209',
+        peach: '#1C1712',
         mint:  '#0F2A18',
-        cream: '#F2E8D0',
+        cream: '#F5F0E8',
 
-        danger:  '#B62828',
-        success: '#3FB87A',
+        danger:  '#B91C1C',
+        success: '#5C8A3C',
       },
       fontFamily: {
         display: ['"Playfair Display"', 'Georgia', 'serif'],
@@ -54,17 +54,17 @@ export default {
         sans:    ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        gold:         '0 0 18px rgba(232,184,0,0.50), 0 0 36px rgba(232,184,0,0.20)',
-        'gold-sm':    '0 0 8px rgba(232,184,0,0.40)',
-        'gold-lg':    '0 0 28px rgba(232,184,0,0.60), 0 0 56px rgba(232,184,0,0.25)',
-        'gold-inset': 'inset 0 0 18px rgba(232,184,0,0.12)',
-        'red-glow':   '0 0 18px rgba(182,40,40,0.55)',
+        gold:         '0 0 18px rgba(200,155,60,0.45), 0 0 36px rgba(200,155,60,0.18)',
+        'gold-sm':    '0 0 8px rgba(200,155,60,0.35)',
+        'gold-lg':    '0 0 28px rgba(200,155,60,0.55), 0 0 56px rgba(200,155,60,0.25)',
+        'gold-inset': 'inset 0 0 18px rgba(200,155,60,0.12)',
+        'red-glow':   '0 0 18px rgba(185,28,28,0.5)',
         'teal':       '0 0 18px rgba(10,189,74,0.45)',
       },
       backgroundImage: {
-        'gradient-radial':  'radial-gradient(ellipse at top, rgba(232,184,0,0.16), transparent 60%)',
-        'gradient-gold':    'linear-gradient(135deg, #FFD633 0%, #E8B800 55%, #A88600 100%)',
-        'gradient-warmth':  'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(232,184,0,0.18), transparent 70%)',
+        'gradient-radial':  'radial-gradient(ellipse at top, rgba(200,155,60,0.14), transparent 60%)',
+        'gradient-gold':    'linear-gradient(135deg, #F0C060 0%, #C89B3C 50%, #7A5C1A 100%)',
+        'gradient-warmth':  'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(200,155,60,0.18), transparent 70%)',
         'gradient-teal':    'linear-gradient(135deg, #14E85A 0%, #0ABD4A 100%)',
       },
       animation: {
@@ -73,8 +73,8 @@ export default {
       },
       keyframes: {
         'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 18px rgba(232,184,0,0.40)' },
-          '50%':      { boxShadow: '0 0 36px rgba(232,184,0,0.80)' },
+          '0%, 100%': { boxShadow: '0 0 18px rgba(200,155,60,0.40)' },
+          '50%':      { boxShadow: '0 0 36px rgba(200,155,60,0.80)' },
         },
       },
     },

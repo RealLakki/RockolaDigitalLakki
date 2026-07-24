@@ -7,8 +7,8 @@ interface Props {
   duration?: number;
 }
 
-const TITLE_LETTERS = 'EL BAFLE'.split('');
-const SUBTITLE = 'PONLE VOLUMEN A TU NOCHE';
+const TITLE_LETTERS = 'LA CANTINA PLUS'.split('');
+const SUBTITLE = 'CARTAGENA · DESPECHO & POPULAR';
 const RAY_COUNT = 14;
 const PARTICLE_COUNT = 36;
 
@@ -115,14 +115,14 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
     <div
       ref={rootRef}
       className="fixed inset-0 z-[9999] grid place-items-center overflow-hidden"
-      style={{ background: '#0F0A06' }}
+      style={{ background: '#0F0D0A' }}
     >
       {/* Halo ámbar desde el centro */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle at center, rgba(232,184,0,0.22) 0%, rgba(28,18,9,0.96) 45%, #0F0A06 75%)',
+            'radial-gradient(circle at center, rgba(200,155,60,0.22) 0%, rgba(28,23,18,0.96) 45%, #0F0D0A 75%)',
         }}
       />
 
@@ -132,7 +132,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
         className="absolute w-32 h-32 rounded-full pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle, rgba(255,220,80,0.95) 0%, rgba(232,184,0,0.60) 40%, transparent 80%)',
+            'radial-gradient(circle, rgba(255,220,80,0.95) 0%, rgba(200,155,60,0.60) 40%, transparent 80%)',
           filter: 'blur(6px)',
         }}
       />
@@ -151,7 +151,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
               width: '2px',
               height: '300px',
               background:
-                'linear-gradient(to top, rgba(232,184,0,0) 0%, rgba(255,214,51,0.9) 50%, rgba(232,184,0,0) 100%)',
+                'linear-gradient(to top, rgba(200,155,60,0) 0%, rgba(255,214,51,0.9) 50%, rgba(200,155,60,0) 100%)',
               transform: `translate(-50%, -100%) rotate(${(360 / RAY_COUNT) * i}deg)`,
               transformOrigin: 'bottom center',
             }}
@@ -164,8 +164,8 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
         ref={ringRef}
         className="absolute w-72 h-72 rounded-full pointer-events-none"
         style={{
-          border: '2px solid rgba(232,184,0,0.75)',
-          boxShadow: '0 0 30px rgba(232,184,0,0.50), inset 0 0 30px rgba(255,214,51,0.18)',
+          border: '2px solid rgba(200,155,60,0.75)',
+          boxShadow: '0 0 30px rgba(200,155,60,0.50), inset 0 0 30px rgba(255,214,51,0.18)',
         }}
       />
 
@@ -178,8 +178,8 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
             style={{
               width: 4 + Math.random() * 3,
               height: 4 + Math.random() * 3,
-              background: i % 3 === 0 ? '#F2E8D0' : i % 3 === 1 ? '#E8B800' : '#FFD633',
-              boxShadow: '0 0 8px rgba(232,184,0,0.85)',
+              background: i % 3 === 0 ? '#F5F0E8' : i % 3 === 1 ? '#C89B3C' : '#F0C060',
+              boxShadow: '0 0 8px rgba(200,155,60,0.85)',
               transform: 'translate(-50%, -50%)',
             }}
           />
@@ -190,7 +190,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
       <div
         ref={logoWrapRef}
         className="relative z-10"
-        style={{ filter: 'drop-shadow(0 0 32px rgba(232,184,0,0.70))' }}
+        style={{ filter: 'drop-shadow(0 0 32px rgba(200,155,60,0.70))' }}
       >
         <AppLogo size={240} glow />
       </div>
