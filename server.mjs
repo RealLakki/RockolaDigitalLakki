@@ -383,6 +383,18 @@ async function validateQueueRequest(venue, track) {
   }
   if (!venue.allowedGenres || venue.allowedGenres.length === 0) return { ok: true };
 
+  const houseMatch = String(track?.providerId ?? '').match(/^house:([^:]+):/);
+  if (houseMatch) {
+    const curated = await db.getHouseTrackByProviderId(track.providerId);
+    const sameVideo = curated?.track?.youtubeVideoId && curated.track.youtubeVideoId === track?.youtubeVideoId;
+    if (!curated || !sameVideo) {
+      return { ok: false, status: 422, error: 'Cancion de la casa no verificada' };
+    }
+    return venue.allowedGenres.includes(curated.genre)
+      ? { ok: true }
+      : { ok: false, status: 422, error: 'Genero no permitido por el local' };
+  }
+
   const tags = await fetchLastfmValidationTags(track);
   const verdict = genreMatchedFor(tags, track?.genres?.[0], venue.allowedGenres, track?.artists?.[0]);
   if (!verdict.allowed) {
