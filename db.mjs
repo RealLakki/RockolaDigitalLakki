@@ -19,6 +19,330 @@ export const pool = new Pool({
 
 const q = (text, params) => pool.query(text, params);
 
+const HOUSE_TRACKS = [
+  {
+    genre: 'popular',
+    track: {
+      providerId: 'house:popular:arelys-henao:amante-y-amigo',
+      title: 'Amante y Amigo',
+      artists: ['Arelys Henao'],
+      durationMs: 185000,
+      imageUrl: 'https://i.ytimg.com/vi/FpMmpJrQIJA/hqdefault.jpg',
+      genres: ['Música popular'],
+      explicit: false,
+      youtubeVideoId: 'FpMmpJrQIJA',
+      isOfficial: false,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'popular',
+    track: {
+      providerId: 'house:popular:luis-alberto-posada:me-tomas-y-me-dejas',
+      title: 'Me Tomas y Me Dejas',
+      artists: ['Luis Alberto Posada'],
+      durationMs: 203000,
+      imageUrl: 'https://i.ytimg.com/vi/JoSRCwCkan4/hqdefault.jpg',
+      genres: ['Música popular'],
+      explicit: false,
+      youtubeVideoId: 'JoSRCwCkan4',
+      isOfficial: false,
+      hasVideo: false,
+    },
+  },
+  {
+    genre: 'popular',
+    track: {
+      providerId: 'house:popular:jessi-uribe:dulce-pecado',
+      title: 'Dulce Pecado',
+      artists: ['Jessi Uribe'],
+      durationMs: 180000,
+      imageUrl: 'https://i.ytimg.com/vi/-b21-NCfNzM/hqdefault.jpg',
+      genres: ['Música popular'],
+      explicit: false,
+      youtubeVideoId: '-b21-NCfNzM',
+      isOfficial: false,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'ranchera',
+    track: {
+      providerId: 'house:ranchera:vicente-fernandez:aca-entre-nos',
+      title: 'Acá Entre Nos',
+      artists: ['Vicente Fernández'],
+      durationMs: 196000,
+      imageUrl: 'https://i.ytimg.com/vi/Zy89cMj4W68/hqdefault.jpg',
+      genres: ['Ranchera'],
+      explicit: false,
+      youtubeVideoId: 'Zy89cMj4W68',
+      isOfficial: true,
+      hasVideo: false,
+    },
+  },
+  {
+    genre: 'ranchera',
+    track: {
+      providerId: 'house:ranchera:vicente-fernandez:volver-volver',
+      title: 'Volver Volver',
+      artists: ['Vicente Fernández'],
+      durationMs: 181000,
+      imageUrl: 'https://i.ytimg.com/vi/mmS_sqZBXVQ/hqdefault.jpg',
+      genres: ['Ranchera'],
+      explicit: false,
+      youtubeVideoId: 'mmS_sqZBXVQ',
+      isOfficial: true,
+      hasVideo: false,
+    },
+  },
+  {
+    genre: 'ranchera',
+    track: {
+      providerId: 'house:ranchera:pedro-infante:cielito-lindo',
+      title: 'Cielito Lindo',
+      artists: ['Pedro Infante'],
+      durationMs: 184000,
+      imageUrl: 'https://i.ytimg.com/vi/HPF44uH3M88/hqdefault.jpg',
+      genres: ['Ranchera'],
+      explicit: false,
+      youtubeVideoId: 'HPF44uH3M88',
+      isOfficial: false,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'banda',
+    track: {
+      providerId: 'house:banda:banda-ms:el-color-de-tus-ojos',
+      title: 'El Color de Tus Ojos',
+      artists: ['Banda MS'],
+      durationMs: 249000,
+      imageUrl: 'https://i.ytimg.com/vi/Mfv1thwO0hw/hqdefault.jpg',
+      genres: ['Banda'],
+      explicit: false,
+      youtubeVideoId: 'Mfv1thwO0hw',
+      isOfficial: true,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'banda',
+    track: {
+      providerId: 'house:banda:arrolladora:el-ruido-de-tus-zapatos',
+      title: 'El Ruido de Tus Zapatos',
+      artists: ['La Arrolladora Banda El Limón'],
+      durationMs: 266000,
+      imageUrl: 'https://i.ytimg.com/vi/aR5f59K8R5w/hqdefault.jpg',
+      genres: ['Banda'],
+      explicit: false,
+      youtubeVideoId: 'aR5f59K8R5w',
+      isOfficial: true,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'banda',
+    track: {
+      providerId: 'house:banda:banda-ms:mi-mayor-anhelo',
+      title: 'Mi Mayor Anhelo',
+      artists: ['Banda MS'],
+      durationMs: 218000,
+      imageUrl: 'https://i.ytimg.com/vi/WmlJHCzvs_Y/hqdefault.jpg',
+      genres: ['Banda'],
+      explicit: false,
+      youtubeVideoId: 'WmlJHCzvs_Y',
+      isOfficial: false,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'corridos',
+    track: {
+      providerId: 'house:corridos:tigres-del-norte:la-puerta-negra',
+      title: 'La Puerta Negra',
+      artists: ['Los Tigres del Norte'],
+      durationMs: 203000,
+      imageUrl: 'https://i.ytimg.com/vi/rryDND06LHU/hqdefault.jpg',
+      genres: ['Corridos'],
+      explicit: false,
+      youtubeVideoId: 'rryDND06LHU',
+      isOfficial: true,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'corridos',
+    track: {
+      providerId: 'house:corridos:eslabon-peso-pluma:ella-baila-sola',
+      title: 'Ella Baila Sola',
+      artists: ['Eslabon Armado', 'Peso Pluma'],
+      durationMs: 166000,
+      imageUrl: 'https://i.ytimg.com/vi/7WNwGkgjKV8/hqdefault.jpg',
+      genres: ['Corridos'],
+      explicit: false,
+      youtubeVideoId: '7WNwGkgjKV8',
+      isOfficial: false,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'corridos',
+    track: {
+      providerId: 'house:corridos:natanael-cano:disfruto-lo-malo',
+      title: 'Disfruto Lo Malo',
+      artists: ['Natanael Cano'],
+      durationMs: 202000,
+      imageUrl: 'https://i.ytimg.com/vi/1VsfWqiSBBg/hqdefault.jpg',
+      genres: ['Corridos'],
+      explicit: false,
+      youtubeVideoId: '1VsfWqiSBBg',
+      isOfficial: false,
+      hasVideo: true,
+    },
+  },
+  {
+    genre: 'corridos',
+    track: {
+      providerId: 'house:corridos:el-fantasma:soy-buen-amigo',
+      title: 'Soy Buen Amigo',
+      artists: ['El Fantasma'],
+      durationMs: 156000,
+      imageUrl: 'https://i.ytimg.com/vi/cPKAmxB4tzk/hqdefault.jpg',
+      genres: ['Corridos'],
+      explicit: false,
+      youtubeVideoId: 'cPKAmxB4tzk',
+      isOfficial: false,
+      hasVideo: false,
+    },
+  },
+];
+
+export async function ensureOperationalTables() {
+  await q(`
+    create table if not exists external_api_cache (
+      namespace text not null,
+      cache_key text not null,
+      status integer not null,
+      data jsonb not null,
+      expires_at timestamptz not null,
+      updated_at timestamptz not null default now(),
+      primary key (namespace, cache_key)
+    );
+    create index if not exists external_api_cache_exp
+      on external_api_cache (namespace, expires_at);
+    create table if not exists api_circuit_breakers (
+      namespace text primary key,
+      blocked_until timestamptz not null,
+      reason text,
+      updated_at timestamptz not null default now()
+    );
+    create table if not exists house_tracks (
+      provider_id text primary key,
+      genre text not null,
+      track jsonb not null,
+      active boolean not null default true,
+      weight integer not null default 1,
+      last_picked_at timestamptz,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    );
+    create index if not exists house_tracks_active_genre
+      on house_tracks (active, genre, last_picked_at);
+  `);
+
+  for (const item of HOUSE_TRACKS) {
+    await q(
+      `insert into house_tracks (provider_id, genre, track, active, weight, updated_at)
+       values ($1, $2, $3, true, 1, now())
+       on conflict (provider_id) do update set
+         genre = excluded.genre,
+         track = excluded.track,
+         active = true,
+         updated_at = now()`,
+      [item.track.providerId, item.genre, item.track],
+    );
+  }
+}
+
+/* ───────────────────── operational cache / house tracks ───────────────────── */
+
+export async function getApiCache(namespace, cacheKey, { allowStale = false } = {}) {
+  const { rows } = await q(
+    `select status, data
+       from external_api_cache
+      where namespace = $1
+        and cache_key = $2
+        and ($3::boolean or expires_at > now())
+      limit 1`,
+    [namespace, cacheKey, allowStale],
+  );
+  return rows[0] ? { status: rows[0].status, data: rows[0].data } : null;
+}
+
+export async function setApiCache(namespace, cacheKey, status, data, ttlMs) {
+  const ttlSeconds = Math.max(1, Math.ceil(Number(ttlMs) / 1000));
+  await q(
+    `insert into external_api_cache (namespace, cache_key, status, data, expires_at, updated_at)
+     values ($1, $2, $3, $4, now() + ($5::text || ' seconds')::interval, now())
+     on conflict (namespace, cache_key) do update set
+       status = excluded.status,
+       data = excluded.data,
+       expires_at = excluded.expires_at,
+       updated_at = now()`,
+    [namespace, cacheKey, status, data, ttlSeconds],
+  );
+}
+
+export async function getCircuitBreaker(namespace) {
+  const { rows } = await q(
+    `select namespace, blocked_until, reason
+       from api_circuit_breakers
+      where namespace = $1 and blocked_until > now()
+      limit 1`,
+    [namespace],
+  );
+  if (!rows[0]) return null;
+  return {
+    namespace: rows[0].namespace,
+    blockedUntil: rows[0].blocked_until instanceof Date
+      ? rows[0].blocked_until.toISOString()
+      : rows[0].blocked_until,
+    reason: rows[0].reason,
+  };
+}
+
+export async function tripCircuitBreaker(namespace, ms, reason) {
+  const blockSeconds = Math.max(1, Math.ceil(Number(ms) / 1000));
+  await q(
+    `insert into api_circuit_breakers (namespace, blocked_until, reason, updated_at)
+     values ($1, now() + ($2::text || ' seconds')::interval, $3, now())
+     on conflict (namespace) do update set
+       blocked_until = greatest(api_circuit_breakers.blocked_until, excluded.blocked_until),
+       reason = excluded.reason,
+       updated_at = now()`,
+    [namespace, blockSeconds, reason],
+  );
+}
+
+export async function getRandomHouseTrack({ allowedGenres = [], excludeProviderIds = [] } = {}) {
+  const allowed = Array.isArray(allowedGenres) ? allowedGenres.filter(Boolean) : [];
+  const excluded = Array.isArray(excludeProviderIds) ? excludeProviderIds.filter(Boolean) : [];
+  const { rows } = await q(
+    `select provider_id, track
+       from house_tracks
+      where active = true
+        and (cardinality($1::text[]) = 0 or genre = any($1::text[]))
+        and not (provider_id = any($2::text[]))
+      order by last_picked_at asc nulls first, random()
+      limit 1`,
+    [allowed, excluded],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  await q('update house_tracks set last_picked_at = now() where provider_id = $1', [row.provider_id]);
+  return row.track;
+}
+
 /* ───────────────────────────── mappers ───────────────────────────── */
 
 const mapVenue = (r) => ({

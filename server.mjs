@@ -65,10 +65,12 @@ const dataLimiter   = mkLimiter(2000, 'Too many requests');
 // saturan (Apple rate-limita por IP del servidor; Last.fm tiene límite bajo).
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-function makeCache(ttlMs, max = 5000) {
+function makeCache(ttlMs, max = 5000, namespace = 'default') {
   const store = new Map(); // key -> { at, status, data }
   const inflight = new Map();
   return {
+    namespace,
+    ttlMs,
     fresh(key) { const e = store.get(key); return e && Date.now() - e.at < ttlMs ? e : null; },
     stale(key) { return store.get(key) || null; }, // cualquier entrada, aunque vencida
     set(key, status, data) {
@@ -107,18 +109,66 @@ async function fetchJsonRetry(url, opts = {}, tries = 3) {
  * falla, sirve cache VIEJO en vez de reventar. `isOk` evita cachear respuestas
  * de error (p.ej. rate-limit de Last.fm devuelto con HTTP 200).
  */
+async function readDbCache(cache, key, allowStale = false) {
+  try {
+    return await db.getApiCache(cache.namespace, key, { allowStale });
+  } catch (e) {
+    console.warn('[api-cache] read failed', cache.namespace, e?.message ?? e);
+    return null;
+  }
+}
+
+async function writeDbCache(cache, key, status, data) {
+  try {
+    await db.setApiCache(cache.namespace, key, status, data, cache.ttlMs);
+  } catch (e) {
+    console.warn('[api-cache] write failed', cache.namespace, e?.message ?? e);
+  }
+}
+
+async function activeCircuit(cache) {
+  try {
+    return await db.getCircuitBreaker(cache.namespace);
+  } catch (e) {
+    console.warn('[api-cache] circuit read failed', cache.namespace, e?.message ?? e);
+    return null;
+  }
+}
+
+async function tripCircuit(cache, ms, reason) {
+  try {
+    await db.tripCircuitBreaker(cache.namespace, ms, reason);
+  } catch (e) {
+    console.warn('[api-cache] circuit write failed', cache.namespace, e?.message ?? e);
+  }
+}
+
 async function cachedProxy(cache, key, fetcher, isOk = () => true) {
   const fresh = cache.fresh(key);
   if (fresh) return { status: fresh.status, data: fresh.data };
+  const dbFresh = await readDbCache(cache, key);
+  if (dbFresh) {
+    cache.set(key, dbFresh.status, dbFresh.data);
+    return dbFresh;
+  }
   if (cache.inflight.has(key)) return cache.inflight.get(key);
   const p = (async () => {
     try {
+      const stale = cache.stale(key) ?? await readDbCache(cache, key, true);
+      const circuit = await activeCircuit(cache);
+      if (circuit) {
+        if (stale) return { status: stale.status, data: stale.data };
+        return { status: 503, data: { error: 'upstream temporarily paused' } };
+      }
       const res = await fetcher();
       if (res.status >= 200 && res.status < 300 && isOk(res.data)) {
         cache.set(key, res.status, res.data);
+        await writeDbCache(cache, key, res.status, res.data);
         return res;
       }
-      const stale = cache.stale(key); // upstream falló → cache viejo si hay
+      if (res.status === 429 || res.status === 503 || res.status >= 500 || !isOk(res.data)) {
+        await tripCircuit(cache, 2 * 60 * 1000, `status:${res.status}`);
+      }
       if (stale) return { status: stale.status, data: stale.data };
       return res;
     } finally {
@@ -129,15 +179,225 @@ async function cachedProxy(cache, key, fetcher, isOk = () => true) {
   return p;
 }
 
-const itunesCache   = makeCache(10 * 60 * 1000);       // 10 min
-const lastfmCache   = makeCache(24 * 60 * 60 * 1000);  // 24 h (tags casi no cambian)
-const ytSearchCache = makeCache(60 * 60 * 1000);       // 1 h
-const ytVideosCache = makeCache(24 * 60 * 60 * 1000);  // 24 h
+const itunesCache   = makeCache(10 * 60 * 1000, 5000, 'itunes-search');   // 10 min
+const lastfmCache   = makeCache(24 * 60 * 60 * 1000, 5000, 'lastfm');      // 24 h (tags casi no cambian)
+const ytSearchCache = makeCache(60 * 60 * 1000, 5000, 'youtube-search');   // 1 h
+const ytVideosCache = makeCache(24 * 60 * 60 * 1000, 5000, 'youtube-videos'); // 24 h
 
 // Predicados de "respuesta válida" (no cachear errores upstream).
 const itunesOk = (d) => d && typeof d.resultCount === 'number';
 const lastfmOk = (d) => d && (d.error === undefined || d.error === 6); // 6 = not found (cacheable)
 const ytOk     = (d) => d && !d.error;
+
+// ─── Genre guard (server-side policy; mirrors src/lib/types.ts) ─────────────
+const ALL_GENRES = [
+  'reggaeton', 'salsa', 'merengue', 'bachata', 'champeta', 'vallenato',
+  'cumbia', 'popular', 'ranchera', 'pop', 'rock', 'electronica', 'hiphop',
+  'rnb', 'afrobeats', 'dembow', 'banda', 'corridos',
+];
+
+const GENRE_KEYWORDS = {
+  reggaeton: ['reggaeton', 'reggaetón', 'urban latin', 'urbano latino', 'reggaeton y hip-hop'],
+  salsa: ['salsa', 'tropical'],
+  merengue: ['merengue', 'tropical'],
+  bachata: ['bachata', 'tropical'],
+  champeta: ['champeta', 'tropical'],
+  vallenato: ['vallenato'],
+  cumbia: ['cumbia', 'tropical'],
+  popular: ['popular'],
+  ranchera: ['ranchera', 'mariachi'],
+  pop: ['pop'],
+  rock: ['rock', 'alternative', 'metal'],
+  electronica: ['electronic', 'electrónica', 'dance', 'house', 'edm'],
+  hiphop: ['hip-hop', 'rap', 'hip hop'],
+  rnb: ['r&b', 'soul', 'r&b/soul'],
+  afrobeats: ['afrobeats', 'afro', 'african'],
+  dembow: ['dembow'],
+  banda: ['banda', 'regional mexican', 'regional mexicano', 'música mexicana', 'musica mexicana'],
+  corridos: ['corridos', 'norteño', 'regional mexican', 'regional mexicano', 'música mexicana', 'musica mexicana'],
+};
+
+const POPULAR_ARTISTS = [
+  'charrito negro',
+  'el charrito negro',
+  'luis alberto posada',
+  'yeison jimenez',
+  'andariego',
+  'el andariego',
+  'paola jara',
+  'jessi uribe',
+  'pipe bueno',
+  'jhonny rivera',
+  'johnny rivera',
+  'arelys henao',
+  'francy',
+  'dario gomez',
+  'darío gómez',
+  'giovanny ayala',
+  'alzate',
+  'john alex castano',
+  'john alex castaño',
+];
+
+const GENRE_LASTFM_TAGS = {
+  reggaeton: ['reggaeton', 'reggaetón', 'perreo', 'urbano latino', 'latin urban', 'trap latino', 'reggaeton colombiano'],
+  salsa: ['salsa', 'salsa colombiana', 'salsa cubana', 'salsa choke'],
+  merengue: ['merengue'],
+  bachata: ['bachata', 'bachata moderna'],
+  champeta: ['champeta', 'champeta urbana'],
+  vallenato: ['vallenato', 'vallenato moderno', 'vallenato romantico'],
+  cumbia: ['cumbia', 'cumbia colombiana', 'cumbia villera', 'cumbia sonidera'],
+  popular: [
+    'musica popular', 'música popular', 'popular colombiano',
+    'despecho', 'ranchera colombiana', 'colombian popular',
+    'ranchera', 'rancheras',
+  ],
+  ranchera: ['ranchera', 'mariachi', 'mexican folk', 'rancheras', 'mexican ranchera'],
+  pop: ['pop', 'latin pop', 'pop latino', 'spanish pop', 'pop rock'],
+  rock: ['rock', 'classic rock', 'hard rock', 'metal', 'alternative rock', 'indie rock', 'rock en español', 'rock latino'],
+  electronica: ['electronic', 'electronica', 'electrónica', 'house', 'techno', 'edm', 'dance', 'electro'],
+  hiphop: ['hip-hop', 'hip hop', 'rap', 'rap latino', 'rap español'],
+  rnb: ['r&b', 'rnb', 'soul', 'neo soul'],
+  afrobeats: ['afrobeats', 'afrobeat', 'afro', 'afropop'],
+  dembow: ['dembow', 'dembow dominicano'],
+  banda: ['banda', 'banda sinaloense', 'regional mexicano', 'banda mx'],
+  corridos: ['corridos', 'corrido', 'corridos tumbados', 'norteño', 'narcocorridos', 'corridos belicos', 'sad sierreño', 'sierreño', 'sierreno'],
+};
+
+const REGIONAL_MEXICAN_GENRES = ['banda', 'corridos'];
+
+function normalizeGenreText(s) {
+  return String(s)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function tagMatches(myTag, trackTag) {
+  const a = normalizeGenreText(myTag);
+  const b = normalizeGenreText(trackTag);
+  if (a === b) return true;
+  const safe = a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|\\s|[/&,-])${safe}(\\s|[/&,-]|$)`, 'i').test(b);
+}
+
+function knownPopularArtist(artistName) {
+  if (!artistName) return false;
+  const artist = normalizeGenreText(artistName);
+  return POPULAR_ARTISTS.some((name) => artist.includes(normalizeGenreText(name)));
+}
+
+function genreAllowed(itunesGenre, allowedGenres) {
+  if (!allowedGenres || allowedGenres.length === 0) return true;
+  if (!itunesGenre) return false;
+  const g = String(itunesGenre).toLowerCase();
+
+  if (/regional mexican(o)?|música mexicana|musica mexicana/.test(g)) {
+    return allowedGenres.some((ag) => REGIONAL_MEXICAN_GENRES.includes(ag));
+  }
+
+  if (/^(latin|música latina|musica latina)$/.test(g)) return false;
+
+  return allowedGenres.some((ag) =>
+    GENRE_KEYWORDS[ag]?.some((kw) => g.includes(kw)),
+  );
+}
+
+function genreMatchedFor(lastfmTags, itunesGenre, allowedGenres, artistName) {
+  if (!allowedGenres || allowedGenres.length === 0) return { allowed: true };
+  if (allowedGenres.includes('popular') && knownPopularArtist(artistName)) {
+    return { allowed: true, matchedGenre: 'popular', matchedTag: 'known-artist' };
+  }
+  if (lastfmTags.length > 0) {
+    for (const ag of allowedGenres) {
+      for (const myTag of GENRE_LASTFM_TAGS[ag] ?? []) {
+        for (const trackTag of lastfmTags) {
+          if (tagMatches(myTag, trackTag)) return { allowed: true, matchedGenre: ag, matchedTag: trackTag };
+        }
+      }
+    }
+    for (const g of ALL_GENRES) {
+      if (allowedGenres.includes(g)) continue;
+      for (const myTag of GENRE_LASTFM_TAGS[g] ?? []) {
+        for (const trackTag of lastfmTags) {
+          if (tagMatches(myTag, trackTag)) return { allowed: false, matchedGenre: g, matchedTag: trackTag };
+        }
+      }
+    }
+  }
+  return { allowed: genreAllowed(itunesGenre, allowedGenres) };
+}
+
+const normalizeTags = (tags) =>
+  (Array.isArray(tags) ? tags : [])
+    .map((t) => String(t?.name ?? t).toLowerCase().trim())
+    .filter((t) => t.length > 1);
+
+async function fetchLastfmValidationTags(track) {
+  if (!LASTFM_API_KEY) return [];
+  const artist = String(track?.artists?.[0] ?? '').trim();
+  const title = String(track?.title ?? '').trim();
+  if (!artist || !title) return [];
+
+  const trackParams = new URLSearchParams({
+    method: 'track.getInfo',
+    api_key: LASTFM_API_KEY,
+    artist,
+    track: title,
+    format: 'json',
+    autocorrect: '1',
+  });
+  const trackOut = await cachedProxy(
+    lastfmCache,
+    `validate-track|${artist.toLowerCase()}|${title.toLowerCase()}`,
+    () => fetchJsonRetry(`${LASTFM_API}?${trackParams}`),
+    lastfmOk,
+  );
+  const trackTags = normalizeTags(trackOut.data?.track?.toptags?.tag);
+  if (trackTags.length > 0) return trackTags;
+
+  const artistParams = new URLSearchParams({
+    method: 'artist.getInfo',
+    api_key: LASTFM_API_KEY,
+    artist,
+    format: 'json',
+    autocorrect: '1',
+  });
+  const artistOut = await cachedProxy(
+    lastfmCache,
+    `validate-artist|${artist.toLowerCase()}`,
+    () => fetchJsonRetry(`${LASTFM_API}?${artistParams}`),
+    lastfmOk,
+  );
+  return normalizeTags(artistOut.data?.artist?.tags?.tag);
+}
+
+async function validateQueueRequest(venue, track) {
+  if (!venue) return { ok: false, status: 404, error: 'venue not found' };
+  if (venue.blockedTrackIds?.includes(track?.providerId)) {
+    return { ok: false, status: 403, error: 'Cancion bloqueada por el local' };
+  }
+  if (venue.allowExplicit === false && track?.explicit === true) {
+    return { ok: false, status: 403, error: 'Contenido explicito no permitido' };
+  }
+  if (!venue.allowedGenres || venue.allowedGenres.length === 0) return { ok: true };
+
+  const tags = await fetchLastfmValidationTags(track);
+  const verdict = genreMatchedFor(tags, track?.genres?.[0], venue.allowedGenres, track?.artists?.[0]);
+  if (!verdict.allowed) {
+    console.warn('[genre-guard] rejected', {
+      title: track?.title,
+      artist: track?.artists?.[0],
+      itunes: track?.genres?.[0],
+      tags,
+      allowed: venue.allowedGenres,
+      matched: verdict.matchedGenre,
+    });
+    return { ok: false, status: 422, error: 'Genero no permitido por el local' };
+  }
+  return { ok: true };
+}
 
 // ─── YouTube proxy ─────────────────────────────────────────────────────────────
 app.get('/api/youtube-search', ytLimiter, async (req, res) => {
@@ -249,6 +509,9 @@ app.post('/api/queue', dataLimiter, async (req, res) => {
   try {
     const { venueId, track, requestedBy, requestedByName, boosted } = req.body ?? {};
     if (!venueId || !track || !requestedBy) return res.status(400).json({ error: 'Missing fields' });
+    const venue = await db.getVenueById(String(venueId));
+    const verdict = await validateQueueRequest(venue, track);
+    if (!verdict.ok) return res.status(verdict.status).json({ error: verdict.error });
     const item = await db.enqueueTrack({ venueId, track, requestedBy, requestedByName, boosted });
     emitVenue(venueId, 'queue:changed');
     res.json(item);
@@ -291,6 +554,40 @@ app.put('/api/youtube-resolutions/:providerId', dataLimiter, async (req, res) =>
   } catch (e) { console.error('[ytres.put]', e); res.status(500).json({ error: 'db error' }); }
 });
 
+app.get('/api/house-track', dataLimiter, async (req, res) => {
+  try {
+    const venueId = String(req.query.venueId ?? '');
+    if (!venueId) return res.status(400).json({ error: 'Missing venueId' });
+    const venue = await db.getVenueById(venueId);
+    if (!venue) return res.status(404).json({ error: 'venue not found' });
+    const excludeProviderIds = String(req.query.exclude ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+    const excludes = new Set(excludeProviderIds);
+
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const track = await db.getRandomHouseTrack({
+        allowedGenres: venue.allowedGenres,
+        excludeProviderIds: [...excludes],
+      });
+      if (!track) return res.json(null);
+      excludes.add(track.providerId);
+
+      const verdict = await validateQueueRequest(venue, track);
+      if (verdict.ok) return res.json(track);
+
+      console.warn('[house-track] curated track rejected', {
+        providerId: track.providerId,
+        title: track.title,
+        artist: track.artists?.[0],
+        reason: verdict.error,
+      });
+    }
+    res.json(null);
+  } catch (e) { console.error('[house-track.get]', e); res.status(500).json({ error: 'db error' }); }
+});
+
 app.get('/api/top-tracks', dataLimiter, async (req, res) => {
   try {
     const { venueId, limit } = req.query;
@@ -306,7 +603,11 @@ app.get('/{*path}', (_req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  if (!YOUTUBE_API_KEY) console.warn('[WARN] YOUTUBE_API_KEY not set — YouTube search will fail');
-});
+db.ensureOperationalTables()
+  .catch((e) => console.error('[db.init]', e))
+  .finally(() => {
+    httpServer.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      if (!YOUTUBE_API_KEY) console.warn('[WARN] YOUTUBE_API_KEY not set — YouTube search will fail');
+    });
+  });

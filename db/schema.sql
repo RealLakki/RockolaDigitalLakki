@@ -57,3 +57,44 @@ create table if not exists youtube_resolutions (
   has_video        boolean not null default true,
   resolved_at      timestamptz not null default now()
 );
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- house_tracks: catálogo preaprobado para el autofill. No depende de APIs en vivo.
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists house_tracks (
+  provider_id     text primary key,
+  genre           text not null,
+  track           jsonb not null,
+  active          boolean not null default true,
+  weight          integer not null default 1,
+  last_picked_at  timestamptz,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create index if not exists house_tracks_active_genre
+  on house_tracks (active, genre, last_picked_at);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- external_api_cache + api_circuit_breakers: cache persistente y protección
+-- cuando iTunes/Last.fm/YouTube rate-limitan o fallan.
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists external_api_cache (
+  namespace   text not null,
+  cache_key   text not null,
+  status      integer not null,
+  data        jsonb not null,
+  expires_at  timestamptz not null,
+  updated_at  timestamptz not null default now(),
+  primary key (namespace, cache_key)
+);
+
+create index if not exists external_api_cache_exp
+  on external_api_cache (namespace, expires_at);
+
+create table if not exists api_circuit_breakers (
+  namespace    text primary key,
+  blocked_until timestamptz not null,
+  reason       text,
+  updated_at   timestamptz not null default now()
+);

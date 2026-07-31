@@ -24,6 +24,8 @@ export const ALL_GENRES: Genre[] = [
   'rnb', 'afrobeats', 'dembow', 'banda', 'corridos',
 ];
 
+export const CANTINA_GENRES: Genre[] = ['popular', 'ranchera', 'banda', 'corridos'];
+
 export const GENRE_LABEL: Record<Genre, string> = {
   reggaeton: 'Reggaetón',
   salsa: 'Salsa',
@@ -44,6 +46,28 @@ export const GENRE_LABEL: Record<Genre, string> = {
   banda: 'Banda',
   corridos: 'Corridos',
 };
+
+const POPULAR_ARTISTS = [
+  'charrito negro',
+  'el charrito negro',
+  'luis alberto posada',
+  'yeison jimenez',
+  'andariego',
+  'el andariego',
+  'paola jara',
+  'jessi uribe',
+  'pipe bueno',
+  'jhonny rivera',
+  'johnny rivera',
+  'arelys henao',
+  'francy',
+  'dario gomez',
+  'darío gómez',
+  'giovanny ayala',
+  'alzate',
+  'john alex castano',
+  'john alex castaño',
+];
 
 /**
  * Mapeo de nuestros géneros a palabras clave que aparecen en
@@ -108,29 +132,19 @@ export const GENRE_LASTFM_TAGS: Record<Genre, string[]> = {
   corridos: ['corridos', 'corrido', 'corridos tumbados', 'norteño', 'narcocorridos', 'corridos belicos', 'sad sierreño', 'sierreño', 'sierreno'],
 };
 
-/** Géneros latinos urbanos/tropicales — los que iTunes a veces etiqueta
- * solo como "Latin" / "Música Latina" sin granularidad. Popular y ranchera
- * NO van aquí porque iTunes les pone genéricamente "Latin" pero realmente
- * son género distinto. */
-const LATIN_NONREGIONAL: Genre[] = [
-  'reggaeton', 'salsa', 'merengue', 'bachata', 'champeta',
-  'vallenato', 'cumbia', 'dembow', 'popular', 'ranchera',
-];
-
 /** Géneros regionales mexicanos — iTunes los etiqueta como "Música Mexicana"
  * o "Regional Mexican", NUNCA como "Latin" puro. */
 const REGIONAL_MEXICAN_GENRES: Genre[] = ['banda', 'corridos'];
 
 /**
  * Decide si un primaryGenreName de iTunes pasa el filtro de allowedGenres.
- * Política PERMISIVA: ante duda genuina, dejar pasar (no esconder canciones
- * válidas). Solo se rechaza cuando iTunes da una señal clara de OTRO género.
+ * Politica estricta cuando hay filtros activos: ante duda, no dejar pasar.
+ * El cliente puede ampliar resultados con Last.fm antes de caer aqui, pero el
+ * fallback de iTunes no debe abrir la puerta a "Latin" generico.
  * - allowedGenres vacío → todo permitido
- * - Sin género en iTunes + filtros activos → PERMITIR (no se puede confirmar
- *   que sea de otro género → permisivo)
+ * - Sin género en iTunes + filtros activos → rechazar
  * - "Música Mexicana" / "Regional Mexican" → solo si admin tiene banda/corridos
- * - "Latin" / "Música Latina" puro → solo si admin tiene latino NO-regional
- *   (banda/corridos no aplican porque iTunes los etiqueta específicamente)
+ * - "Latin" / "Música Latina" puro → rechazar por ambiguo
  * - Cualquier otro → match por substring contra GENRE_KEYWORDS
  */
 export function genreAllowed(
@@ -138,7 +152,7 @@ export function genreAllowed(
   allowedGenres: Genre[],
 ): boolean {
   if (allowedGenres.length === 0) return true;
-  if (!itunesGenre) return true; // sin señal de género → permisivo (no esconder)
+  if (!itunesGenre) return false;
   const g = itunesGenre.toLowerCase();
 
   // Regional Mexicano explícito (banda, corridos, norteño)
@@ -146,11 +160,9 @@ export function genreAllowed(
     return allowedGenres.some((ag) => REGIONAL_MEXICAN_GENRES.includes(ag));
   }
 
-  // Latin / Música Latina puro (ambiguo) → solo permitir si admin tiene un
-  // género latino NO-regional. iTunes nunca etiqueta banda/corridos como
-  // "Latin" puro; les pone "Música Mexicana".
+  // Latin / Música Latina puro es demasiado ambiguo para un filtro estricto.
   if (/^(latin|música latina|musica latina)$/.test(g)) {
-    return allowedGenres.some((ag) => LATIN_NONREGIONAL.includes(ag));
+    return false;
   }
 
   // Match por keywords
@@ -165,8 +177,8 @@ export function genreAllowed(
  * no matchea con "salsapuerca" (sin word boundary).
  */
 function tagMatches(myTag: string, trackTag: string): boolean {
-  const a = myTag.toLowerCase().trim();
-  const b = trackTag.toLowerCase().trim();
+  const a = normalizeGenreText(myTag);
+  const b = normalizeGenreText(trackTag);
   if (a === b) return true;
   // Escape regex special chars
   const safe = a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -174,10 +186,24 @@ function tagMatches(myTag: string, trackTag: string): boolean {
   return re.test(b);
 }
 
+function normalizeGenreText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function knownPopularArtist(artistName: string | undefined): boolean {
+  if (!artistName) return false;
+  const artist = normalizeGenreText(artistName);
+  return POPULAR_ARTISTS.some((name) => artist.includes(normalizeGenreText(name)));
+}
+
 /**
  * Decide si un track con tags de Last.fm pasa el filtro de allowedGenres.
  * - allowedGenres vacío → todo permitido
- * - Sin tags → fallback a `genreAllowed` con el itunesGenre original
+ * - Sin tags → fallback estricto a `genreAllowed` con el itunesGenre original
  * - Con tags → matchea word-boundary contra GENRE_LASTFM_TAGS
  *
  * Devuelve también un debug object para logging.
@@ -198,23 +224,27 @@ export function genreAllowedByTags(
 }
 
 /** Veredicto de género para un track, combinando tags de Last.fm (señal fuerte)
- * con el género de iTunes (fallback permisivo). Devuelve además qué género
+ * con el género de iTunes (fallback estricto). Devuelve además qué género
  * matcheó — útil para logs y para filtrar el house-filler con la misma lógica.
  *
- * Reglas (política permisiva, determinista):
+ * Reglas (politica estricta, determinista):
  *  1. Tag de Last.fm que matchea un género PERMITIDO → mostrar.
  *  2. Tag de Last.fm que matchea OTRO género conocido (no permitido) → ocultar
  *     (el género es determinable y no está en la lista).
- *  3. Tags presentes pero ninguno reconocible como género → indeterminable por
- *     Last.fm → caer al género de iTunes.
- *  4. Sin tags de Last.fm → género de iTunes (que ya es permisivo ante duda).
+ *  3. Tags presentes pero ninguno reconocible como genero → caer al genero de
+ *     iTunes, que tambien es estricto.
+ *  4. Sin tags de Last.fm → genero de iTunes estricto.
  */
 export function genreMatchedFor(
   lastfmTags: string[],
   itunesGenre: string | undefined,
   allowedGenres: Genre[],
+  artistName?: string,
 ): { allowed: boolean; matchedGenre?: Genre; matchedTag?: string } {
   if (allowedGenres.length === 0) return { allowed: true };
+  if (allowedGenres.includes('popular') && knownPopularArtist(artistName)) {
+    return { allowed: true, matchedGenre: 'popular', matchedTag: 'known-artist' };
+  }
 
   if (lastfmTags.length > 0) {
     // 1) ¿matchea un género PERMITIDO?
@@ -241,7 +271,7 @@ export function genreMatchedFor(
     // 3) Tags presentes pero sin señal de género reconocible → fallback iTunes.
   }
 
-  // 4) Sin señal fiable de Last.fm → género de iTunes (permisivo ante duda).
+  // 4) Sin señal fiable de Last.fm → genero de iTunes estricto.
   return { allowed: genreAllowed(itunesGenre, allowedGenres) };
 }
 

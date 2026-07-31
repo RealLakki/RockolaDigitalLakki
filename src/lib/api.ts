@@ -53,6 +53,15 @@ export async function enqueueTrack(args: {
   return req<QueueItem>(`/queue`, { method: 'POST', body: JSON.stringify(args) });
 }
 
+export async function fetchHouseTrack(
+  venueId: string,
+  excludeProviderIds: string[] = [],
+): Promise<ResolvedTrack | null> {
+  const params = new URLSearchParams({ venueId });
+  if (excludeProviderIds.length > 0) params.set('exclude', excludeProviderIds.join(','));
+  return req<ResolvedTrack | null>(`/house-track?${params}`);
+}
+
 export async function setItemStatus(id: string, status: QueueItem['status']): Promise<void> {
   await req(`/queue/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
 }

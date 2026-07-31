@@ -33,6 +33,15 @@ const NEGATIVE_KEYWORDS = [
   'mashup', 'parody', 'parodia', 'fan made',
 ];
 
+const CLIP_KEYWORDS = [
+  'shorts', 'short', 'reel', 'reels', 'tiktok', 'tik tok',
+  'whatsapp', 'estado', 'status', 'clip', 'fragmento', 'fragment',
+  'adelanto', 'preview', 'teaser',
+];
+
+const MIN_SONG_VIDEO_MS = 90_000;
+const MAX_SONG_VIDEO_MS = 12 * 60_000;
+
 /**
  * Modificadores de versión: si aparecen en el CANDIDATO pero NO en el track
  * pedido, es señal de que es una versión distinta (remix, extended, acústica,
@@ -64,6 +73,49 @@ const normalize = (s: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
+function normalizedPhraseIn(phrase: string, blob: string): boolean {
+  const safe = normalize(phrase).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|\\s)${safe}(\\s|$)`, 'i').test(blob);
+}
+
+export function getCandidateRejectionReasons(
+  candidate: YoutubeCandidate,
+  track?: TrackSearchResult,
+): string[] {
+  const reasons: string[] = [];
+  const titleNorm = normalize(candidate.title);
+  const channelNorm = normalize(candidate.channelTitle);
+  const blob = `${titleNorm} ${channelNorm}`;
+
+  if (candidate.durationMs > 0 && candidate.durationMs < MIN_SONG_VIDEO_MS) {
+    reasons.push('duration:too_short');
+  }
+  if (candidate.durationMs > MAX_SONG_VIDEO_MS) {
+    reasons.push('duration:too_long');
+  }
+  for (const kw of CLIP_KEYWORDS) {
+    if (normalizedPhraseIn(kw, blob)) reasons.push(`clip:${kw}`);
+  }
+
+  if (track?.durationMs && candidate.durationMs > 0) {
+    const candidateSec = candidate.durationMs / 1000;
+    const trackSec = track.durationMs / 1000;
+    const diffSec = trackSec - candidateSec;
+    if (candidateSec < trackSec * 0.65 && diffSec > 45) {
+      reasons.push('duration:short_vs_track');
+    }
+  }
+
+  return reasons;
+}
+
+export function isUsableSongCandidate(
+  candidate: YoutubeCandidate,
+  track?: TrackSearchResult,
+): boolean {
+  return getCandidateRejectionReasons(candidate, track).length === 0;
+}
+
 export function scoreCandidate(
   candidate: YoutubeCandidate,
   track: TrackSearchResult,
@@ -74,6 +126,17 @@ export function scoreCandidate(
   const channelNorm = normalize(candidate.channelTitle);
   const trackTitleNorm = normalize(track.title);
   const artistNorms = track.artists.map(normalize);
+
+  const rejectionReasons = getCandidateRejectionReasons(candidate, track);
+  if (rejectionReasons.length > 0) {
+    return {
+      candidate,
+      score: -999,
+      reasons: rejectionReasons,
+      isOfficial: false,
+      hasVideo: false,
+    };
+  }
 
   // 1) Match de título.
   // Heurística: las palabras largas (>=5 letras) son "anclas" — diferencian
@@ -241,7 +304,10 @@ export function pickBestCandidate(
   track: TrackSearchResult,
 ): ScoredCandidate | null {
   if (candidates.length === 0) return null;
-  const scored = candidates.map((c) => scoreCandidate(c, track));
+  const scored = candidates
+    .map((c) => scoreCandidate(c, track))
+    .filter((s) => s.score > -999);
+  if (scored.length === 0) return null;
   scored.sort((a, b) => b.score - a.score);
   return scored[0];
 }

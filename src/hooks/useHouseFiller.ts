@@ -1,9 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { getRandomHouseTrack } from '../lib/houseArtists';
-import { getTrackTags, isLastfmEnabled } from '../lib/lastfm';
-import { resolveOnYoutube } from '../lib/youtube';
-import { enqueueTrack } from '../lib/api';
-import { genreMatchedFor, type Genre, type QueueItem, type ResolvedTrack } from '../lib/types';
+import { useCallback, useEffect, useRef } from 'react';
+import { enqueueTrack, fetchHouseTrack } from '../lib/api';
+import type { Genre, QueueItem, ResolvedTrack } from '../lib/types';
 
 interface Args {
   venueId: string;
@@ -18,25 +15,8 @@ interface Args {
   silenceMs?: number;
 }
 
-/** Verifica que un track candidato del house-filler pase el filtro de género
- * si hay filtros activos. Si Last.fm no está habilitado, no podemos filtrar
- * y dejamos pasar (mejor 1 canción "off-genre" que silencio total). */
-async function passesFilter(
-  artist: string,
-  title: string,
-  itunesGenre: string | undefined,
-  allowedGenres: Genre[],
-): Promise<boolean> {
-  if (allowedGenres.length === 0) return true;
-  if (!isLastfmEnabled()) return true;
-  try {
-    const tags = await getTrackTags(artist, title);
-    const result = genreMatchedFor(tags, itunesGenre, allowedGenres);
-    return result.allowed;
-  } catch {
-    return true; // fail-open
-  }
-}
+const PREFETCH_RETRY_MS = 10_000;
+const SILENCE_RETRY_MS = 8_000;
 
 /**
  * Auto-fill con "Las de siempre" cuando la cola se queda vacía. Estrategia:
@@ -62,7 +42,30 @@ export function useHouseFiller({
   const genresKey = allowedGenres.slice().sort().join(',');
   const prefetchedRef = useRef<ResolvedTrack | null>(null);
   const fetchingRef = useRef(false);
+  const injectingRef = useRef(false);
   const enqueueTimerRef = useRef<number | null>(null);
+  const triedProviderIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    triedProviderIdsRef.current.clear();
+    prefetchedRef.current = null;
+  }, [genresKey]);
+
+  const fetchCatalogTrack = useCallback(async (label: string): Promise<ResolvedTrack | null> => {
+    const excludeProviderIds = new Set<string>(triedProviderIdsRef.current);
+    queued.forEach((item) => excludeProviderIds.add(item.track.providerId));
+    if (nowPlaying) excludeProviderIds.add(nowPlaying.track.providerId);
+
+    const track = await fetchHouseTrack(venueId, [...excludeProviderIds]);
+    if (!track) {
+      console.warn(`[house-filler] ${label}: no curated track available`);
+      return null;
+    }
+
+    triedProviderIdsRef.current.add(track.providerId);
+    console.log(`[house-filler] ${label}: picked`, track.title, 'by', track.artists[0]);
+    return track;
+  }, [nowPlaying, queued, venueId]);
 
   // ─── Pre-fetch en background ───
   // Apenas la cola se queda vacía, busca y resuelve una canción para tenerla lista.
@@ -73,51 +76,35 @@ export function useHouseFiller({
       prefetchedRef.current = null;
       return;
     }
-    if (prefetchedRef.current || fetchingRef.current) return;
 
-    fetchingRef.current = true;
-    console.log('[house-filler] pre-fetching backup track...');
-    void (async () => {
+    let cancelled = false;
+    const attemptPrefetch = async () => {
+      if (cancelled || prefetchedRef.current || fetchingRef.current) return;
+      fetchingRef.current = true;
+      console.log('[house-filler] pre-fetching backup track...');
       try {
-        // Hasta 5 intentos para encontrar uno que pase el filtro de género
-        let track = null;
-        let attempts = 0;
-        while (attempts < 5) {
-          attempts++;
-          const candidate = await getRandomHouseTrack(new Set());
-          if (!candidate) continue;
-          const ok = await passesFilter(
-            candidate.artists[0] ?? '',
-            candidate.title,
-            candidate.genres?.[0],
-            allowedGenres,
-          );
-          if (ok) {
-            track = candidate;
-            break;
-          }
-          console.log('[house-filler] candidate filtered:', candidate.title, 'by', candidate.artists[0]);
-        }
-
-        if (!track) {
-          console.warn('[house-filler] pre-fetch: no candidate passed filter after', attempts, 'tries');
-          return;
-        }
-        const resolved = await resolveOnYoutube(track);
+        const resolved = await fetchCatalogTrack('pre-fetch');
+        if (cancelled) return;
         if (!resolved) {
-          console.warn('[house-filler] pre-fetch: could not resolve', track.title);
+          console.warn('[house-filler] pre-fetch: no valid candidate found');
           return;
         }
         prefetchedRef.current = resolved;
-        console.log('[house-filler] ✓ pre-fetched:', resolved.title, 'by', resolved.artists[0]);
+        console.log('[house-filler] pre-fetched:', resolved.title, 'by', resolved.artists[0]);
       } catch (e) {
         console.error('[house-filler] pre-fetch error:', e);
       } finally {
         fetchingRef.current = false;
       }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queued.length, enabled, genresKey]);
+    };
+
+    void attemptPrefetch();
+    const retry = window.setInterval(() => { void attemptPrefetch(); }, PREFETCH_RETRY_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(retry);
+    };
+  }, [queued.length, enabled, genresKey, fetchCatalogTrack]);
 
   // ─── Inject cuando hay silencio ───
   useEffect(() => {
@@ -129,16 +116,23 @@ export function useHouseFiller({
         window.clearTimeout(enqueueTimerRef.current);
         enqueueTimerRef.current = null;
       }
+      injectingRef.current = false;
       return;
     }
     if (enqueueTimerRef.current) return;
 
-    enqueueTimerRef.current = window.setTimeout(async () => {
+    let cancelled = false;
+    const tryInject = async () => {
+      if (cancelled || injectingRef.current) return;
+      injectingRef.current = true;
       enqueueTimerRef.current = null;
 
-      // Si tenemos pre-fetched, instant-inject
-      if (prefetchedRef.current) {
-        const track = prefetchedRef.current;
+      const track = prefetchedRef.current ?? await fetchCatalogTrack('silence');
+      if (cancelled) {
+        injectingRef.current = false;
+        return;
+      }
+      if (track) {
         prefetchedRef.current = null;
         try {
           await enqueueTrack({
@@ -147,37 +141,28 @@ export function useHouseFiller({
             requestedBy: 'house',
             requestedByName: 'La casa',
           });
-          console.log('[house-filler] ✓ instant-injected:', track.title);
+          console.log('[house-filler] injected:', track.title);
         } catch (e) {
           console.error('[house-filler] inject failed:', e);
+          injectingRef.current = false;
         }
         return;
       }
 
-      // Fallback lento: no había pre-fetched, hacer el ciclo completo ahora
-      console.log('[house-filler] no pre-fetched, doing slow path');
-      try {
-        const track = await getRandomHouseTrack(new Set());
-        if (!track) return;
-        const resolved = await resolveOnYoutube(track);
-        if (!resolved) return;
-        await enqueueTrack({
-          venueId,
-          track: resolved,
-          requestedBy: 'house',
-          requestedByName: 'La casa',
-        });
-        console.log('[house-filler] ✓ slow-path added:', resolved.title);
-      } catch (e) {
-        console.error('[house-filler] slow path error:', e);
-      }
-    }, silenceMs);
+      console.warn('[house-filler] silence: no valid track yet, will retry');
+      injectingRef.current = false;
+    };
+
+    enqueueTimerRef.current = window.setTimeout(() => { void tryInject(); }, silenceMs);
+    const retry = window.setInterval(() => { void tryInject(); }, SILENCE_RETRY_MS);
 
     return () => {
+      cancelled = true;
       if (enqueueTimerRef.current) {
         window.clearTimeout(enqueueTimerRef.current);
         enqueueTimerRef.current = null;
       }
+      window.clearInterval(retry);
     };
-  }, [nowPlaying, queued.length, enabled, silenceMs, venueId]);
+  }, [nowPlaying, queued.length, enabled, silenceMs, venueId, genresKey, fetchCatalogTrack]);
 }

@@ -107,6 +107,19 @@ function CustomerInner({ venue }: { venue: Venue }) {
         showToast('✨ Agregada a la cola', 'ok');
       } catch (e) {
         console.error(e);
+        const msg = e instanceof Error ? e.message : '';
+        if (msg.includes('Genero no permitido')) {
+          showToast('Ese género no está permitido por el local', 'err');
+          return;
+        }
+        if (msg.includes('Contenido explicito')) {
+          showToast('Contenido explícito no permitido', 'err');
+          return;
+        }
+        if (msg.includes('Cancion bloqueada')) {
+          showToast('Canción bloqueada por el bar', 'err');
+          return;
+        }
         showToast('No pude agregarla, intenta de nuevo', 'err');
       } finally {
         setAdding(null);

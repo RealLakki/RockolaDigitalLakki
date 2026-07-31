@@ -76,6 +76,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   const preloadedNextRef = useRef<string | null>(null);
   const fadingRef = useRef(false);
   const fadeCleanupRef = useRef<(() => void) | null>(null);
+  const retiringItemRef = useRef<string | null>(null);
   // Marca que un switch acaba de ocurrir — usado por effects de "promote" y
   // "load" para no recargar/duplicar mientras DB se sincroniza por realtime.
   const justSwitchedRef = useRef(false);
@@ -101,6 +102,9 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   useEffect(() => {
     if (!active.state.isReady || !nowPlaying || showOverlay) return;
     const vid = nowPlaying.track.youtubeVideoId;
+    if (retiringItemRef.current && retiringItemRef.current !== nowPlaying.id) {
+      retiringItemRef.current = null;
+    }
 
     // Después del crossfade, nowPlaying (DB) tarda en reflejar el switch.
     // Durante ese window, NO recargamos — eso interrumpiria B (que ya esta
@@ -111,6 +115,10 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       }
       return;
     }
+
+    // Si ya marcamos este item como played/skipped pero el realtime todavia
+    // no actualizo nowPlaying, no lo recargamos por accidente.
+    if (retiringItemRef.current === nowPlaying.id) return;
 
     if (loadedRef.current[activeSlot] === vid) return;
     console.log('[player] loading', vid, 'in slot', activeSlot);
@@ -177,6 +185,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
 
     if (nowPlaying) {
       const playedId = nowPlaying.id;
+      retiringItemRef.current = playedId;
       // Encadenar para que sea una sola tanda de updates, no dos round-trips
       void setItemStatus(playedId, 'played')
         .then(() => nextItem ? setItemStatus(nextItem.id, 'playing') : Promise.resolve())
@@ -232,6 +241,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       }
       console.log('[player] track ended without crossfade');
       if (nowPlaying) {
+        retiringItemRef.current = nowPlaying.id;
         void setItemStatus(nowPlaying.id, 'played').then(() => {
           loadedRef.current[activeSlot] = null;
           void refresh();
@@ -252,6 +262,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
 
   const handleSkipTrack = useCallback(() => {
     if (!nowPlaying) return;
+    retiringItemRef.current = nowPlaying.id;
     void setItemStatus(nowPlaying.id, 'skipped').then(() => {
       loadedRef.current[activeSlot] = null;
       preloadedNextRef.current = null;
@@ -284,6 +295,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       if (code === 100 || code === 101 || code === 150) {
         console.warn('[player] video blocked/unavailable, skipping. Code:', code);
         if (nowPlaying) {
+          retiringItemRef.current = nowPlaying.id;
           void setItemStatus(nowPlaying.id, 'skipped').then(() => {
             loadedRef.current[activeSlot] = null;
             preloadedNextRef.current = null;
@@ -384,6 +396,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       }
 
       cascadeRef.current++;
+      if (stuckItem.id === nowPlaying?.id) retiringItemRef.current = stuckItem.id;
       console.warn(
         `[player] stuck "${stuckItem.track.title}" ` +
         `(t=${t.toFixed(2)}, sinceLoaded=${sinceLoaded}ms, cascade=${cascadeRef.current}/${STUCK_MAX_CASCADE}), auto-skipping`,

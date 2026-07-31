@@ -1,5 +1,5 @@
 import type { ResolvedTrack, TrackSearchResult } from './types';
-import { pickBestCandidate, type YoutubeCandidate } from '../utils/youtubeFilter';
+import { isUsableSongCandidate, pickBestCandidate, type YoutubeCandidate } from '../utils/youtubeFilter';
 import { cacheYoutubeResolution, getCachedYoutubeResolution } from './api';
 
 export const YT_PROVIDER_PREFIX = 'yt:';
@@ -111,7 +111,7 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
   const norm = (s: string) =>
     s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-  const inRange = (c: typeof candidates[number]) => c.durationMs >= 60_000 && c.durationMs <= 600_000;
+  const inRange = (c: typeof candidates[number]) => c.durationMs >= 90_000 && c.durationMs <= 720_000;
 
   // Cuántas palabras del query aparecen en title o channel del candidato
   const relevanceScore = (c: typeof candidates[number]): number => {
@@ -125,6 +125,7 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
 
   const clean = candidates
     .filter((c) => !NEGATIVES.test(c.title))
+    .filter((c) => isUsableSongCandidate(c))
     .filter(inRange)
     .filter((c) => relevanceScore(c) >= minRelevance);
 
@@ -199,12 +200,15 @@ export function isYoutubeProvidedTrack(track: TrackSearchResult): boolean {
 
 /**
  * Extrae el videoId de cualquier formato de URL de YouTube.
- * Soporta: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/shorts/ID,
+ * Soporta videos normales: youtube.com/watch?v=ID, youtu.be/ID,
  * youtube.com/embed/ID, music.youtube.com/watch?v=ID, m.youtube.com/...
+ * Rechaza /shorts/ porque suelen ser clips, no canciones completas.
  */
 export function extractYoutubeVideoId(input: string): string | null {
   const s = input.trim();
   if (!s) return null;
+
+  if (/youtube\.com\/shorts\//i.test(s) || /\/shorts\//i.test(s)) return null;
 
   // Si ya parece un videoId puro (11 chars, alfanuméricos + - _)
   if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
@@ -213,7 +217,6 @@ export function extractYoutubeVideoId(input: string): string | null {
   const patterns = [
     /[?&]v=([a-zA-Z0-9_-]{11})/,           // youtube.com/watch?v=XXX
     /youtu\.be\/([a-zA-Z0-9_-]{11})/,      // youtu.be/XXX
-    /\/shorts\/([a-zA-Z0-9_-]{11})/,       // /shorts/XXX
     /\/embed\/([a-zA-Z0-9_-]{11})/,        // /embed/XXX
     /\/v\/([a-zA-Z0-9_-]{11})/,            // /v/XXX
   ];
@@ -237,6 +240,7 @@ export async function youtubeUrlToTrack(input: string): Promise<TrackSearchResul
   if (candidates.length === 0) return null;
 
   const c = candidates[0];
+  if (!isUsableSongCandidate(c)) return null;
   const TOPIC = /\s*-\s*Topic$/i;
   const isTopic = TOPIC.test(c.channelTitle);
 

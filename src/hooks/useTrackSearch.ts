@@ -62,7 +62,7 @@ export function useTrackSearch(
           rawResults.forEach((r, i) => {
             const tags = tagBatches[i] ?? [];
             const itunesGenre = r.genres?.[0];
-            const result = genreMatchedFor(tags, itunesGenre, allowed);
+            const result = genreMatchedFor(tags, itunesGenre, allowed, r.artists[0]);
             if (result.allowed) {
               filtered.push(r);
               acceptedDebug.push({
