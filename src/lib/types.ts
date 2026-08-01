@@ -135,6 +135,11 @@ export const GENRE_LASTFM_TAGS: Record<Genre, string[]> = {
 /** Géneros regionales mexicanos — iTunes los etiqueta como "Música Mexicana"
  * o "Regional Mexican", NUNCA como "Latin" puro. */
 const REGIONAL_MEXICAN_GENRES: Genre[] = ['banda', 'corridos'];
+// Géneros latinos NO regionales — iTunes a veces los etiqueta solo como "Latin".
+const LATIN_NONREGIONAL: Genre[] = [
+  'reggaeton', 'salsa', 'merengue', 'bachata', 'champeta',
+  'vallenato', 'cumbia', 'dembow', 'popular', 'ranchera',
+];
 
 /**
  * Decide si un primaryGenreName de iTunes pasa el filtro de allowedGenres.
@@ -152,7 +157,9 @@ export function genreAllowed(
   allowedGenres: Genre[],
 ): boolean {
   if (allowedGenres.length === 0) return true;
-  if (!itunesGenre) return false;
+  // PERMISIVO ante la duda: sin género de iTunes no se puede confirmar → se
+  // deja pasar (solo se rechaza con señal positiva de otro género).
+  if (!itunesGenre) return true;
   const g = itunesGenre.toLowerCase();
 
   // Regional Mexicano explícito (banda, corridos, norteño)
@@ -160,9 +167,9 @@ export function genreAllowed(
     return allowedGenres.some((ag) => REGIONAL_MEXICAN_GENRES.includes(ag));
   }
 
-  // Latin / Música Latina puro es demasiado ambiguo para un filtro estricto.
+  // "Latin" a secas es ambiguo → permitir si el local acepta algún género latino.
   if (/^(latin|música latina|musica latina)$/.test(g)) {
-    return false;
+    return allowedGenres.some((ag) => LATIN_NONREGIONAL.includes(ag));
   }
 
   // Match por keywords

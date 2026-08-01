@@ -366,6 +366,12 @@ const GENRE_LASTFM_TAGS = {
 };
 
 const REGIONAL_MEXICAN_GENRES = ['banda', 'corridos'];
+// Géneros latinos NO regionales — iTunes a veces los etiqueta solo como "Latin".
+// Si el local permite alguno de estos, un track "Latin" ambiguo se deja pasar.
+const LATIN_NONREGIONAL = [
+  'reggaeton', 'salsa', 'merengue', 'bachata', 'champeta',
+  'vallenato', 'cumbia', 'dembow', 'popular', 'ranchera',
+];
 
 function normalizeGenreText(s) {
   return String(s)
@@ -391,14 +397,20 @@ function knownPopularArtist(artistName) {
 
 function genreAllowed(itunesGenre, allowedGenres) {
   if (!allowedGenres || allowedGenres.length === 0) return true;
-  if (!itunesGenre) return false;
+  // PERMISIVO ante la duda: sin género de iTunes (típico de canciones agregadas
+  // vía YouTube) NO se puede confirmar → se deja pasar. Solo se rechaza cuando
+  // hay señal POSITIVA de otro género (aquí o vía tags de Last.fm arriba).
+  if (!itunesGenre) return true;
   const g = String(itunesGenre).toLowerCase();
 
   if (/regional mexican(o)?|música mexicana|musica mexicana/.test(g)) {
     return allowedGenres.some((ag) => REGIONAL_MEXICAN_GENRES.includes(ag));
   }
 
-  if (/^(latin|música latina|musica latina)$/.test(g)) return false;
+  // "Latin" a secas es ambiguo → permitir si el local acepta algún género latino.
+  if (/^(latin|música latina|musica latina)$/.test(g)) {
+    return allowedGenres.some((ag) => LATIN_NONREGIONAL.includes(ag));
+  }
 
   return allowedGenres.some((ag) =>
     GENRE_KEYWORDS[ag]?.some((kw) => g.includes(kw)),
