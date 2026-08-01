@@ -36,7 +36,11 @@ io.on('connection', (socket) => {
 });
 
 // ─── API keys (server-only, nunca expuestas al cliente) ───────────────────────
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+// YouTube: soporta MÚLTIPLES API keys (YOUTUBE_API_KEYS=k1,k2,k3) con failover
+// por cuota. Cada key de un proyecto de Google distinto = +100 búsquedas/día.
+// Fallback a YOUTUBE_API_KEY (una sola) por compatibilidad.
+const YT_KEYS = (process.env.YOUTUBE_API_KEYS || process.env.YOUTUBE_API_KEY || '')
+  .split(',').map((k) => k.trim()).filter(Boolean);
 const LASTFM_API_KEY  = process.env.VITE_LASTFM_API_KEY || process.env.LASTFM_API_KEY;
 const YT_API          = 'https://www.googleapis.com/youtube/v3';
 const LASTFM_API      = 'https://ws.audioscrobbler.com/2.0/';
@@ -188,6 +192,103 @@ const ytVideosCache = makeCache(24 * 60 * 60 * 1000, 5000, 'youtube-videos'); //
 const itunesOk = (d) => d && typeof d.resultCount === 'number';
 const lastfmOk = (d) => d && (d.error === undefined || d.error === 6); // 6 = not found (cacheable)
 const ytOk     = (d) => d && !d.error;
+
+// ── YouTube: failover entre múltiples keys cuando una agota su cuota ─────────
+const ytKeyExhausted = new Map(); // key -> ts hasta el que se considera agotada
+
+function isYtQuotaError(status, data) {
+  const reason = data?.error?.errors?.[0]?.reason || '';
+  const st = data?.error?.status || '';
+  const msg = data?.error?.message || '';
+  return status === 429 || /quota|ratelimit|dailylimit|resource_exhausted/i.test(`${reason} ${st} ${msg}`);
+}
+
+/** Llama a la YouTube API probando cada key en orden; salta las agotadas y hace
+ *  failover a la siguiente cuando una devuelve error de cuota. Devuelve {status,data}. */
+async function youtubeFetch(endpoint, paramsObj) {
+  const now = Date.now();
+  const fresh = YT_KEYS.filter((k) => (ytKeyExhausted.get(k) ?? 0) < now);
+  const order = fresh.length ? fresh : YT_KEYS; // si todas agotadas, reintenta todas
+  let last = { status: 503, data: { error: 'no YouTube API keys configured' } };
+  for (const key of order) {
+    const qs = new URLSearchParams({ ...paramsObj, key });
+    const res = await fetchJsonRetry(`${YT_API}/${endpoint}?${qs}`, {
+      headers: { Referer: 'https://musica.wailus.co/' },
+    });
+    if (res.status >= 200 && res.status < 300 && !res.data?.error) return res;
+    if (isYtQuotaError(res.status, res.data)) {
+      ytKeyExhausted.set(key, now + 30 * 60 * 1000); // agotada ~30 min, luego re-prueba
+      last = res;
+      continue; // failover a la siguiente key
+    }
+    return res; // error no relacionado a cuota → devolver tal cual
+  }
+  return last;
+}
+
+// ── YouTube: búsqueda SIN cuota (scrape de la página de resultados) ──────────
+// Fallback cuando la cuota de la API se agota. Devuelve el mismo shape que la
+// API (items[].id.videoId + snippet) para que el cliente no note la diferencia.
+/** Extrae el primer objeto JSON balanceado a partir de la posición del '{'. */
+function extractBalancedJson(str, from) {
+  let depth = 0, inStr = false, esc = false;
+  for (let i = from; i < str.length; i++) {
+    const c = str[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+    } else if (c === '"') inStr = true;
+    else if (c === '{') depth++;
+    else if (c === '}') { depth--; if (depth === 0) return str.slice(from, i + 1); }
+  }
+  return null;
+}
+
+async function youtubeSearchScrape(query, maxResults = 25) {
+  try {
+    // sp=EgIQAQ%3D%3D → filtro "solo videos" (evita canales/playlists).
+    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
+    const r = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36',
+        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+      },
+    });
+    if (!r.ok) return null;
+    const html = await r.text();
+    const marker = html.indexOf('ytInitialData');
+    if (marker === -1) return null;
+    const braceStart = html.indexOf('{', html.indexOf('=', marker));
+    const jsonStr = braceStart === -1 ? null : extractBalancedJson(html, braceStart);
+    if (!jsonStr) return null;
+    const data = JSON.parse(jsonStr);
+    const sections = data?.contents?.twoColumnSearchResultsRenderer?.primaryContents
+      ?.sectionListRenderer?.contents ?? [];
+    const items = [];
+    for (const sec of sections) {
+      for (const it of sec?.itemSectionRenderer?.contents ?? []) {
+        const v = it?.videoRenderer;
+        if (!v?.videoId) continue;
+        items.push({
+          id: { videoId: v.videoId },
+          snippet: {
+            title: v.title?.runs?.[0]?.text ?? '',
+            channelTitle: v.ownerText?.runs?.[0]?.text ?? v.longBylineText?.runs?.[0]?.text ?? '',
+            channelId: v.ownerText?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId ?? '',
+            publishedAt: '',
+          },
+        });
+        if (items.length >= maxResults) break;
+      }
+      if (items.length >= maxResults) break;
+    }
+    return items.length ? { items, kind: 'youtube#searchListResponse', _scraped: true } : null;
+  } catch (e) {
+    console.warn('[yt-scrape] failed:', e?.message ?? e);
+    return null;
+  }
+}
 
 // ─── Genre guard (server-side policy; mirrors src/lib/types.ts) ─────────────
 const ALL_GENRES = [
@@ -413,29 +514,29 @@ async function validateQueueRequest(venue, track) {
 
 // ─── YouTube proxy ─────────────────────────────────────────────────────────────
 app.get('/api/youtube-search', ytLimiter, async (req, res) => {
-  if (!YOUTUBE_API_KEY) return res.status(500).json({ error: 'YouTube API key not configured' });
+  if (!YT_KEYS.length) return res.status(500).json({ error: 'YouTube API key not configured' });
   const q = String(req.query.q ?? '');
   const maxResults = String(req.query.maxResults ?? '25');
   if (!q) return res.status(400).json({ error: 'Missing parameter: q' });
-  const params = new URLSearchParams({
-    key: YOUTUBE_API_KEY, part: 'snippet', type: 'video',
-    videoCategoryId: '10', maxResults, q,
-  });
-  const out = await cachedProxy(ytSearchCache, `${q}|${maxResults}`,
-    () => fetchJsonRetry(`${YT_API}/search?${params}`, { headers: { Referer: 'https://musica.wailus.co/' } }),
-    ytOk);
+  // API oficial primero (calidad); si se agota la cuota, scrape sin cuota.
+  // El fallback ocurre DENTRO del fetcher para que cachedProxy vea un éxito y
+  // NO dispare el circuit breaker cuando el scrape sí sirve.
+  const out = await cachedProxy(ytSearchCache, `${q}|${maxResults}`, async () => {
+    const api = await youtubeFetch('search', { part: 'snippet', type: 'video', videoCategoryId: '10', maxResults, q });
+    if (api.status >= 200 && api.status < 300 && ytOk(api.data)) return api;
+    const scraped = await youtubeSearchScrape(q, Number(maxResults) || 25);
+    if (scraped) return { status: 200, data: scraped };
+    return api; // ni API ni scrape → devolver el error de la API
+  }, ytOk);
   res.status(out.status).json(out.data);
 });
 
 app.get('/api/youtube-videos', ytLimiter, async (req, res) => {
-  if (!YOUTUBE_API_KEY) return res.status(500).json({ error: 'YouTube API key not configured' });
+  if (!YT_KEYS.length) return res.status(500).json({ error: 'YouTube API key not configured' });
   const id = String(req.query.id ?? '');
   if (!id) return res.status(400).json({ error: 'Missing parameter: id' });
-  const params = new URLSearchParams({
-    key: YOUTUBE_API_KEY, part: 'snippet,contentDetails,statistics', id,
-  });
   const out = await cachedProxy(ytVideosCache, id,
-    () => fetchJsonRetry(`${YT_API}/videos?${params}`, { headers: { Referer: 'https://musica.wailus.co/' } }),
+    () => youtubeFetch('videos', { part: 'snippet,contentDetails,statistics', id }),
     ytOk);
   res.status(out.status).json(out.data);
 });
@@ -620,6 +721,7 @@ db.ensureOperationalTables()
   .finally(() => {
     httpServer.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      if (!YOUTUBE_API_KEY) console.warn('[WARN] YOUTUBE_API_KEY not set — YouTube search will fail');
+      if (!YT_KEYS.length) console.warn('[WARN] Sin YouTube API keys — la búsqueda de YouTube fallará');
+  else console.log(`YouTube: ${YT_KEYS.length} API key(s) configurada(s)`);
     });
   });
